@@ -1,5 +1,8 @@
-Days One and Two Journal (Monday, 2016-Aug-01 to Tuesday, 2016-Aug-02)
-======================================================================
+Days One and Two: A Loathsome, Offensive Brute. Yet, I Can't Look Away...
+=========================================================================
+
+Monday, August 1st, 2016 to Tuesday, August 2nd, 2016
+-----------------------------------------------------
 
 So my first task was to figure out phzr and brute. In the pre-work, I managed to implement the Phaser
 tutorial, which is in JavaScript in ClojureScript. While phzr tries to make things more Clojure-like,
