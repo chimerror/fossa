@@ -1,8 +1,8 @@
 (defproject fossa "0.1.0-SNAPSHOT"
-  :description "FIXME: write this!"
-  :url "http://example.com/FIXME"
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
+  :description "A logic game based around escaping from a space-time anomaly"
+  :url "https://github.com/foobardog/fossa"
+  :license {:name "MIT License"
+            :url "https://opensource.org/licenses/MIT"}
 
   :min-lein-version "2.6.1"
 
