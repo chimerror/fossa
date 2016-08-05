@@ -2,6 +2,7 @@
 
 ; Rendering components
 (defrecord Sprite [phzr-sprite])
+(defrecord Group [phzr-group])
 
 ; Game components
 (defrecord Background[])
