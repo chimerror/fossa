@@ -36,8 +36,7 @@
         sprite-tint (hex-tints i)]
     (doto (f.rendering/create-phzr-sprite phzr-game sprite-name "hexagon" x y)
       (p.core/pset! :tint sprite-tint)
-      (p.core/pset! :alpha 0)
-      (f.input/initialize-pointer-aware nil nil nil nil))))
+      (p.core/pset! :alpha 0))))
 
 (defn create-tween [phzr-game sprite]
   (f.rendering/create-phzr-tween phzr-game sprite {:alpha 1} 1000 -1 true))

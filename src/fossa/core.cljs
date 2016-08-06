@@ -35,13 +35,13 @@
 
 (defn get-new-phzr-game-object []
   (p.game/->Game
-          f.rendering/game-width
-          f.rendering/game-height
-          (p.core/phaser-constants :auto)
-          "phzr-game"
-          {"preload" preload-assets
-           "create" create-game!
-           "update" update-game!}))
+    f.rendering/game-width
+    f.rendering/game-height
+    (p.core/phaser-constants :auto)
+    "phzr-game"
+    {"preload" preload-assets
+     "create" create-game!
+     "update" update-game!}))
 
 (defn initialize-game! []
   (when-let [curr-game (:phzr-game @*system*)]

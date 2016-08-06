@@ -66,7 +66,7 @@
         initial-y (sprite-position 1)]
     (doto (f.rendering/create-phzr-sprite-in-group group sprite-name "mouse" initial-x initial-y)
       (p.core/pset! :tint sprite-tint)
-      (f.input/initialize-draggable nil nil nil)
+      (f.input/initialize-draggable)
       (-> :input (p.core/pset! :priority-id 1))
       (f.rendering/set-brute-entity! entity))))
 
@@ -92,6 +92,3 @@
         (b.entity/add-entity unassigned-group-entity)
         (b.entity/add-component unassigned-group-entity (f.component/->Group unassigned-group))
         (create-party-members unassigned-group))))
-
-(defn process-one-game-tick [system delta]
-  system)
