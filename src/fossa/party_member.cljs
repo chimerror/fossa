@@ -3,6 +3,7 @@
             [phzr.core :as p.core]
             [phzr.game-object-factory :as p.factory]
             [phzr.loader :as p.loader]
+            [phzr.pointer :as p.pointer]
             [fossa.component :as f.component]
             [fossa.input :as f.input]
             [fossa.rendering :as f.rendering]))
@@ -18,12 +19,6 @@
     (doto (p.factory/group factory stage "unassigned-party-members")
       (p.core/pset! :x (unassigned-group-position 0))
       (p.core/pset! :y (unassigned-group-position 1)))))
-
-(defn on-drag-start [phzr-sprite _ start-x start-y]
-  (println (str "Started dragging " (:name phzr-sprite) " at (" start-x ", " start-y ")!")))
-
-(defn on-drag-stop [phzr-sprite _]
-  (println (str "Stopped dragging " (:name phzr-sprite) " at (" (:x phzr-sprite) ", " (:y phzr-sprite) ")!")))
 
 (def party-member-names
   ["Ann"
@@ -63,7 +58,7 @@
           y (range 0 (* group-grid-height (inc group-grid-rows)) group-grid-height)]
       [x y])))
 
-(defn create-party-member-sprite [group i]
+(defn create-party-member-sprite [entity group i]
   (let [sprite-name (party-member-names i)
         sprite-tint (party-member-tints i)
         sprite-position (party-member-initial-positions i)
@@ -71,23 +66,32 @@
         initial-y (sprite-position 1)]
     (doto (f.rendering/create-phzr-sprite-in-group group sprite-name "mouse" initial-x initial-y)
       (p.core/pset! :tint sprite-tint)
-      (-> :tint (println))
-      (f.input/initialize-draggable on-drag-start nil on-drag-stop))))
+      (f.input/initialize-draggable nil nil nil)
+      (-> :input (p.core/pset! :priority-id 1))
+      (f.rendering/set-brute-entity! entity))))
+
+(defn create-party-member [system group i]
+  (let [party-member (b.entity/create-entity)]
+    (-> system
+      (b.entity/add-entity party-member)
+      (b.entity/add-component party-member
+                                (f.component/->Sprite (create-party-member-sprite party-member group i)))
+      (b.entity/add-component party-member (f.component/->PartyMember)))))
 
 (defn create-party-members [system group]
-  (doseq [i (range 12)]
-    (let [party-member (b.entity/create-entity)]
-      (-> system
-          (b.entity/add-component party-member
-                                  (f.component/->Sprite (create-party-member-sprite group i)))
-          (b.entity/add-component party-member (f.component/->PartyMember))))))
+  (loop [i 0 sys system]
+    (if (= i 12)
+      sys
+      (recur (inc i) (create-party-member sys group i)))))
 
 (defn create-entities [system]
-    (let [phzr-game (:phzr-game system)
-          unassigned-group-entity (b.entity/create-entity)
-          unassigned-group (create-unassigned-group phzr-game)]
-      (-> system
-          (b.entity/add-entity unassigned-group-entity)
-          (b.entity/add-component unassigned-group-entity (f.component/->Group unassigned-group))
-          (create-party-members unassigned-group))
-      system))
+  (let [phzr-game (:phzr-game system)
+        unassigned-group-entity (b.entity/create-entity)
+        unassigned-group (create-unassigned-group phzr-game)]
+    (-> system
+        (b.entity/add-entity unassigned-group-entity)
+        (b.entity/add-component unassigned-group-entity (f.component/->Group unassigned-group))
+        (create-party-members unassigned-group))))
+
+(defn process-one-game-tick [system delta]
+  system)

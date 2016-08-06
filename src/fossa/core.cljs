@@ -20,6 +20,7 @@
 
 (defn create-game! [_]
     (-> @*system*
+        (doto (-> :phzr-game :input (p.core/pset! :max-pointers 1)))
         (f.background/create-entities)
         (f.hex-highlight/create-entities)
         (f.party-member/create-entities)
@@ -34,19 +35,20 @@
 
 (defn get-new-phzr-game-object []
   (p.game/->Game
-    f.rendering/game-width
-    f.rendering/game-height
-    (p.core/phaser-constants :auto)
-    "phzr-game"
-    {"preload" preload-assets
-     "create" create-game!
-     "update" update-game!}))
+          f.rendering/game-width
+          f.rendering/game-height
+          (p.core/phaser-constants :auto)
+          "phzr-game"
+          {"preload" preload-assets
+           "create" create-game!
+           "update" update-game!}))
 
 (defn initialize-game! []
   (when-let [curr-game (:phzr-game @*system*)]
     (p.game/destroy curr-game))
   (-> (b.entity/create-system)
       (assoc :phzr-game (get-new-phzr-game-object))
+      (b.system/add-system-fn f.hex-highlight/process-one-game-tick)
       (as-> s (reset! *system* s))))
 
 (initialize-game!)

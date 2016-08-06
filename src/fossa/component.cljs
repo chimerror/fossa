@@ -1,8 +1,9 @@
 (ns fossa.component)
 
 ; Rendering components
-(defrecord Sprite [phzr-sprite])
 (defrecord Group [phzr-group])
+(defrecord Sprite [phzr-sprite])
+(defrecord Tween [phzr-tween])
 
 ; Game components
 (defrecord Background[])
