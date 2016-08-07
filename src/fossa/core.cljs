@@ -4,7 +4,7 @@
             [phzr.core :as p.core]
             [phzr.game :as p.game]
             [fossa.background :as f.background]
-            [fossa.hex-highlight :as f.hex-highlight]
+            [fossa.exploration-path :as f.exploration-path]
             [fossa.party-member :as f.party-member]
             [fossa.rendering :as f.rendering]))
 
@@ -15,14 +15,14 @@
 (defn preload-assets [phzr-game]
     (-> (:load phzr-game)
         (f.background/preload-assets)
-        (f.hex-highlight/preload-assets)
+        (f.exploration-path/preload-assets)
         (f.party-member/preload-assets)))
 
 (defn create-game! [_]
     (-> @*system*
         (doto (-> :phzr-game :input (p.core/pset! :max-pointers 1)))
         (f.background/create-entities)
-        (f.hex-highlight/create-entities)
+        (f.exploration-path/create-entities)
         (f.party-member/create-entities)
         (as-> s (reset! *system* s))))
 
@@ -49,7 +49,7 @@
   (-> (b.entity/create-system)
       (assoc :phzr-game (get-new-phzr-game-object))
       (b.system/add-system-fn f.party-member/process-one-game-tick)
-      (b.system/add-system-fn f.hex-highlight/process-one-game-tick)
+      (b.system/add-system-fn f.exploration-path/process-one-game-tick)
       (as-> s (reset! *system* s))))
 
 (initialize-game!)

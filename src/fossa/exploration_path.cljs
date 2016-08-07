@@ -1,4 +1,4 @@
-(ns fossa.hex-highlight
+(ns fossa.exploration-path
   (:require [brute.entity :as b.entity]
             [phzr.core :as p.core]
             [phzr.loader :as p.loader]
@@ -29,7 +29,7 @@
    16r44426c
    16r603960])
 
-(defn create-hex-highlight-sprite [phzr-game i]
+(defn create-exploration-path-sprite [phzr-game i]
   (let [sprite-name (str "hex" i)
         creation-point (hex-coordinates i)
         x (creation-point 0)
@@ -42,38 +42,38 @@
 (defn create-tween [phzr-game sprite]
   (f.rendering/create-phzr-tween phzr-game sprite {:alpha 1} 1000 -1 true))
 
-(defn create-hex-highlight [system i]
+(defn create-exploration-path [system i]
   (let [phzr-game (:phzr-game system)
-        hex-highlight (b.entity/create-entity)
-        sprite (create-hex-highlight-sprite phzr-game i)
+        exploration-path (b.entity/create-entity)
+        sprite (create-exploration-path-sprite phzr-game i)
         tween (create-tween phzr-game sprite)]
     (-> system
-        (b.entity/add-entity hex-highlight)
-        (b.entity/add-component hex-highlight (f.component/->Sprite sprite))
-        (b.entity/add-component hex-highlight (f.component/->Tween tween))
-        (b.entity/add-component hex-highlight (f.component/->HexHighlight)))))
+        (b.entity/add-entity exploration-path)
+        (b.entity/add-component exploration-path (f.component/->Sprite sprite))
+        (b.entity/add-component exploration-path (f.component/->Tween tween))
+        (b.entity/add-component exploration-path (f.component/->ExplorationPath)))))
 
 (defn create-entities [system]
   (loop [i 0 sys system]
     (if (= i 6)
       sys
-      (recur (inc i) (create-hex-highlight sys i)))))
+      (recur (inc i) (create-exploration-path sys i)))))
 
 (defn process-one-game-tick [system delta]
   (let [phzr-game (:phzr-game system)
         dragged-party-member-sprite (->> (f.party-member/get-dragged-party-member system)
                                          (f.component/get-phzr-sprite-from-entity system))
-        hex-highlights (b.entity/get-all-entities-with-component system f.component/HexHighlight)]
-    (doseq [hex-highlight hex-highlights]
-      (let [hex-highlight-sprite (f.component/get-phzr-sprite-from-entity system hex-highlight)
-            hex-highlight-tween (f.component/get-phzr-tween-from-entity system hex-highlight)]
+        exploration-paths (b.entity/get-all-entities-with-component system f.component/ExplorationPath)]
+    (doseq [exploration-path exploration-paths]
+      (let [exploration-path-sprite (f.component/get-phzr-sprite-from-entity system exploration-path)
+            exploration-path-tween (f.component/get-phzr-tween-from-entity system exploration-path)]
         (if (and dragged-party-member-sprite
-                 (p.sprite/overlap hex-highlight-sprite dragged-party-member-sprite))
+                 (p.sprite/overlap exploration-path-sprite dragged-party-member-sprite))
           (cond
-            (not (:is-running hex-highlight-tween)) (p.tween/start hex-highlight-tween)
-            (:is-paused hex-highlight-tween) (p.tween/resume hex-highlight-tween))
-          (if (and (:is-running hex-highlight-tween) (not (:is-paused hex-highlight-tween)))
+            (not (:is-running exploration-path-tween)) (p.tween/start exploration-path-tween)
+            (:is-paused exploration-path-tween) (p.tween/resume exploration-path-tween))
+          (if (and (:is-running exploration-path-tween) (not (:is-paused exploration-path-tween)))
             (do
-              (p.tween/pause hex-highlight-tween)
-              (p.core/pset! hex-highlight-sprite :alpha 0)))))))
+              (p.tween/pause exploration-path-tween)
+              (p.core/pset! exploration-path-sprite :alpha 0)))))))
   system)

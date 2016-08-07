@@ -19,5 +19,5 @@
 
 ; Game components
 (defrecord Background[])
-(defrecord HexHighlight [])
+(defrecord ExplorationPath [])
 (defrecord PartyMember [])
