@@ -12,3 +12,6 @@
   (doto phzr-sprite
     (p.core/pset! :input-enabled true)
     (-> :input (set-drag-enabled true))))
+
+(defn just-released [phzr-sprite]
+  (-> phzr-sprite :input (p.input-handler/just-released nil nil))) ; Use main pointer, default threshold

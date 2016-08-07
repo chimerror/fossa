@@ -48,6 +48,7 @@
     (p.game/destroy curr-game))
   (-> (b.entity/create-system)
       (assoc :phzr-game (get-new-phzr-game-object))
+      (b.system/add-system-fn f.party-member/process-one-game-tick)
       (b.system/add-system-fn f.hex-highlight/process-one-game-tick)
       (as-> s (reset! *system* s))))
 

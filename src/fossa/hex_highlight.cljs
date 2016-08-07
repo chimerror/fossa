@@ -6,6 +6,7 @@
             [phzr.tween :as p.tween]
             [fossa.component :as f.component]
             [fossa.input :as f.input]
+            [fossa.party-member :as f.party-member]
             [fossa.rendering :as f.rendering]))
 
 (defn preload-assets [loader]
@@ -60,15 +61,14 @@
 
 (defn process-one-game-tick [system delta]
   (let [phzr-game (:phzr-game system)
-        active-pointer (-> phzr-game :input :active-pointer)
-        party-members (b.entity/get-all-entities-with-component system f.component/PartyMember)
-        party-member-sprites (map #(b.entity/get-component system % f.component/Sprite) party-members)
-        dragged-party-member (-> (first (filter #(-> % :phzr-sprite :input :is-dragged) party-member-sprites)) :phzr-sprite)
+        dragged-party-member-sprite (->> (f.party-member/get-dragged-party-member system)
+                                         (f.component/get-phzr-sprite-from-entity system))
         hex-highlights (b.entity/get-all-entities-with-component system f.component/HexHighlight)]
     (doseq [hex-highlight hex-highlights]
-      (let [hex-highlight-sprite (-> (b.entity/get-component system hex-highlight f.component/Sprite) :phzr-sprite)
-            hex-highlight-tween (-> (b.entity/get-component system hex-highlight f.component/Tween) :phzr-tween)]
-        (if (and dragged-party-member (p.sprite/overlap hex-highlight-sprite dragged-party-member))
+      (let [hex-highlight-sprite (f.component/get-phzr-sprite-from-entity system hex-highlight)
+            hex-highlight-tween (f.component/get-phzr-tween-from-entity system hex-highlight)]
+        (if (and dragged-party-member-sprite
+                 (p.sprite/overlap hex-highlight-sprite dragged-party-member-sprite))
           (cond
             (not (:is-running hex-highlight-tween)) (p.tween/start hex-highlight-tween)
             (:is-paused hex-highlight-tween) (p.tween/resume hex-highlight-tween))

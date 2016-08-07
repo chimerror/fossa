@@ -3,6 +3,8 @@
             [phzr.core :as p.core]
             [phzr.game-object-factory :as p.factory]
             [phzr.loader :as p.loader]
+            [phzr.math :as p.math]
+            [phzr.point :as p.point]
             [phzr.pointer :as p.pointer]
             [fossa.component :as f.component]
             [fossa.input :as f.input]
@@ -12,7 +14,7 @@
   (doto loader
     (p.loader/spritesheet "mouse" "assets/images/mouse.png" 64 64 2)))
 
-(def unassigned-group-position [320 240])
+(def unassigned-group-position [354 272])
 (defn create-unassigned-group [phzr-game]
   (let [factory (:add phzr-game)
         stage (:stage phzr-game)]
@@ -65,6 +67,7 @@
         initial-x (sprite-position 0)
         initial-y (sprite-position 1)]
     (doto (f.rendering/create-phzr-sprite-in-group group sprite-name "mouse" initial-x initial-y)
+      (p.core/pset! :anchor (p.point/->Point 0.5 0.5))
       (p.core/pset! :tint sprite-tint)
       (f.input/initialize-draggable)
       (-> :input (p.core/pset! :priority-id 1))
@@ -92,3 +95,32 @@
         (b.entity/add-entity unassigned-group-entity)
         (b.entity/add-component unassigned-group-entity (f.component/->Group unassigned-group))
         (create-party-members unassigned-group))))
+
+(defn get-dragged-party-member [system]
+  (->> (b.entity/get-all-entities-with-component system f.component/PartyMember)
+       (filter #(-> (f.component/get-phzr-sprite-from-entity system %) :input :is-dragged))
+       (first)))
+
+(defn get-released-party-member [system]
+  (->> (b.entity/get-all-entities-with-component system f.component/PartyMember)
+       (filter #(-> (f.component/get-phzr-sprite-from-entity system %)
+                    (f.input/just-released)))
+       (first)))
+
+(def rotate-point (p.point/->Point 360 275))
+(def rotate-adjustment 2.7488935718910690836548129603696)
+(defn rotate-sprite-towards-drag [sprite]
+  (let [rotation (+ rotate-adjustment
+                    (p.math/angle-between-points- (:world-position sprite) rotate-point))]
+    (p.core/pset! sprite :rotation rotation)))
+
+(defn process-one-game-tick [system delta]
+  (if-let [dragged-party-member (get-dragged-party-member system)]
+    (doto (f.component/get-phzr-sprite-from-entity system dragged-party-member)
+      (p.core/pset! :frame 1)
+      (rotate-sprite-towards-drag)))
+  (if-let [released-party-member (get-released-party-member system)]
+    (doto (f.component/get-phzr-sprite-from-entity system released-party-member)
+      (p.core/pset! :frame 0)
+      (p.core/pset! :rotation 0)))
+  system)
