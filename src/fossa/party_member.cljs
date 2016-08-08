@@ -7,20 +7,14 @@
             [phzr.point :as p.point]
             [phzr.pointer :as p.pointer]
             [fossa.component :as f.component]
+            [fossa.exploration-path :as f.exploration-path]
+            [fossa.group :as f.group]
             [fossa.input :as f.input]
             [fossa.rendering :as f.rendering]))
 
 (defn preload-assets [loader]
   (doto loader
     (p.loader/spritesheet "mouse" "assets/images/mouse.png" 64 64 2)))
-
-(def unassigned-group-position [354 272])
-(defn create-unassigned-group [phzr-game]
-  (let [factory (:add phzr-game)
-        stage (:stage phzr-game)]
-    (doto (p.factory/group factory stage "unassigned-party-members")
-      (p.core/pset! :x (unassigned-group-position 0))
-      (p.core/pset! :y (unassigned-group-position 1)))))
 
 (def party-member-names
   ["Ann"
@@ -50,36 +44,22 @@
    16rffff99
    16rb15928])
 
-(def group-grid-width 25)
-(def group-grid-height 15)
-(def group-grid-rows 3)
-(def group-grid-columns 4)
-(def party-member-initial-positions
-  (vec
-    (for [x (range 0 (* group-grid-width (inc group-grid-columns)) group-grid-width)
-          y (range 0 (* group-grid-height (inc group-grid-rows)) group-grid-height)]
-      [x y])))
-
-(defn create-party-member-sprite [entity group i]
-  (let [sprite-name (party-member-names i)
-        sprite-tint (party-member-tints i)
-        sprite-position (party-member-initial-positions i)
-        initial-x (sprite-position 0)
-        initial-y (sprite-position 1)]
-    (doto (f.rendering/create-phzr-sprite-in-group group sprite-name "mouse" initial-x initial-y)
-      (p.core/pset! :anchor (p.point/->Point 0.5 0.5))
-      (p.core/pset! :tint sprite-tint)
-      (f.input/initialize-draggable)
-      (-> :input (p.core/pset! :priority-id 1))
-      (f.rendering/set-brute-entity! entity))))
+(defn initialize-party-member-sprite [system entity i]
+  (doto (f.component/get-phzr-sprite-from-entity system entity)
+    (p.core/pset! :anchor (p.point/->Point 0.5 0.5))
+    (p.core/pset! :tint (party-member-tints i))
+    (f.input/initialize-draggable)
+    (-> :input (p.core/pset! :priority-id 1)))
+  system)
 
 (defn create-party-member [system group i]
-  (let [party-member (b.entity/create-entity)]
+  (let [party-member (b.entity/create-entity)
+        party-member-name (party-member-names i)]
     (-> system
-      (b.entity/add-entity party-member)
-      (b.entity/add-component party-member
-                                (f.component/->Sprite (create-party-member-sprite party-member group i)))
-      (b.entity/add-component party-member (f.component/->PartyMember)))))
+        (b.entity/add-entity party-member)
+        (f.group/create-sprite-in-group group party-member party-member-name "mouse")
+        (initialize-party-member-sprite party-member i)
+        (b.entity/add-component party-member (f.component/->PartyMember)))))
 
 (defn create-party-members [system group]
   (loop [i 0 sys system]
@@ -88,13 +68,7 @@
       (recur (inc i) (create-party-member sys group i)))))
 
 (defn create-entities [system]
-  (let [phzr-game (:phzr-game system)
-        unassigned-group-entity (b.entity/create-entity)
-        unassigned-group (create-unassigned-group phzr-game)]
-    (-> system
-        (b.entity/add-entity unassigned-group-entity)
-        (b.entity/add-component unassigned-group-entity (f.component/->Group unassigned-group))
-        (create-party-members unassigned-group))))
+  (create-party-members system (f.group/get-unassigned-members-entity system)))
 
 (defn get-dragged-party-member [system]
   (->> (b.entity/get-all-entities-with-component system f.component/PartyMember)
@@ -114,13 +88,44 @@
                     (p.math/angle-between-points- (:world-position sprite) rotate-point))]
     (p.core/pset! sprite :rotation rotation)))
 
-(defn process-one-game-tick [system delta]
+(defn handle-dragged-party-member [system]
   (if-let [dragged-party-member (get-dragged-party-member system)]
-    (doto (f.component/get-phzr-sprite-from-entity system dragged-party-member)
-      (p.core/pset! :frame 1)
-      (rotate-sprite-towards-drag)))
+    (let [sprite (f.component/get-phzr-sprite-from-entity system dragged-party-member)
+          target-exploration-path (f.exploration-path/get-exploration-path-under-sprite system sprite)]
+      (p.core/pset! sprite :frame 1)
+      (rotate-sprite-towards-drag sprite)
+      (if target-exploration-path
+        (f.exploration-path/highlight-exploration-path system target-exploration-path)
+        (f.exploration-path/dehighlight-all-exploration-paths system)))
+    system))
+
+(defn handle-released-party-member [system]
   (if-let [released-party-member (get-released-party-member system)]
-    (doto (f.component/get-phzr-sprite-from-entity system released-party-member)
-      (p.core/pset! :frame 0)
-      (p.core/pset! :rotation 0)))
-  system)
+    (let [released-sprite (f.component/get-phzr-sprite-from-entity system released-party-member)
+          original-sprite-position (-> released-sprite :input :drag-start-point)
+          original-group (f.group/get-group-containing-member system released-party-member)
+          unassigned-group (f.group/get-unassigned-members-entity system)
+          was-assigned (not= original-group unassigned-group)
+          target-path (f.exploration-path/get-exploration-path-under-sprite system released-sprite)]
+      (f.exploration-path/dehighlight-all-exploration-paths system)
+      (p.core/pset! released-sprite :rotation 0)
+      (when (nil? target-path)
+        (p.core/pset! released-sprite :frame 0))
+      (cond
+        (and target-path (not= target-path original-group))
+        (f.group/move-member-to-group system released-party-member target-path)
+        (and (nil? target-path) was-assigned)
+        (f.group/move-member-to-group system released-party-member unassigned-group)
+        :else ; Do nothing. Group will handle drawing it.
+        system))
+    system))
+
+(defn get-party-member-groups [system]
+  (let [party-members (b.entity/get-all-entities-with-component system f.component/PartyMember)]
+    (map #(f.group/get-group-containing-member system %) party-members)))
+
+(defn process-one-game-tick [system delta]
+  (-> system
+      (handle-dragged-party-member)
+      (handle-released-party-member)))
+      ;(as-> s (do (println (distinct (get-party-member-groups s))) s))))

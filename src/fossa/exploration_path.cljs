@@ -6,7 +6,7 @@
             [phzr.tween :as p.tween]
             [fossa.component :as f.component]
             [fossa.input :as f.input]
-            [fossa.party-member :as f.party-member]
+            [fossa.group :as f.group]
             [fossa.rendering :as f.rendering]))
 
 (defn preload-assets [loader]
@@ -29,28 +29,49 @@
    16r44426c
    16r603960])
 
+(def hex-names
+  ["north"
+   "northeast"
+   "southeast"
+   "south"
+   "southwest"
+   "northwest"])
+
+(def unhighlighted-alpha 1)
+(def highlighted-alpha 0)
+
 (defn create-exploration-path-sprite [phzr-game i]
-  (let [sprite-name (str "hex" i)
+  (let [sprite-name (str (hex-names i) " sprite")
         creation-point (hex-coordinates i)
         x (creation-point 0)
         y (creation-point 1)
         sprite-tint (hex-tints i)]
+    ; Note that it's not created within the group. The group is only for party-members
     (doto (f.rendering/create-phzr-sprite phzr-game sprite-name "hexagon" x y)
       (p.core/pset! :tint sprite-tint)
-      (p.core/pset! :alpha 0))))
+      (p.core/pset! :alpha unhighlighted-alpha))))
 
+(def tween-duration 250)
 (defn create-tween [phzr-game sprite]
-  (f.rendering/create-phzr-tween phzr-game sprite {:alpha 1} 1000 -1 true))
+  (f.rendering/create-phzr-tween phzr-game sprite {:alpha highlighted-alpha} tween-duration -1 true))
+
+(def group-offset [25 30])
+(def group-coordinates (vec (map #(mapv + group-offset %) hex-coordinates)))
 
 (defn create-exploration-path [system i]
   (let [phzr-game (:phzr-game system)
         exploration-path (b.entity/create-entity)
         sprite (create-exploration-path-sprite phzr-game i)
-        tween (create-tween phzr-game sprite)]
+        tween (create-tween phzr-game sprite)
+        creation-point (group-coordinates i)
+        x (creation-point 0)
+        y (creation-point 1)
+        group-name (str (hex-names i) " group")]
     (-> system
         (b.entity/add-entity exploration-path)
         (b.entity/add-component exploration-path (f.component/->Sprite sprite))
         (b.entity/add-component exploration-path (f.component/->Tween tween))
+        (b.entity/add-component exploration-path (f.group/create-group phzr-game group-name x y))
         (b.entity/add-component exploration-path (f.component/->ExplorationPath)))))
 
 (defn create-entities [system]
@@ -59,21 +80,37 @@
       sys
       (recur (inc i) (create-exploration-path sys i)))))
 
+(defn get-exploration-path-under-sprite [system sprite]
+  (if sprite
+    (->> (b.entity/get-all-entities-with-component system f.component/ExplorationPath)
+         (filter #(-> (f.component/get-phzr-sprite-from-entity system %) (p.sprite/overlap sprite)))
+         (first))
+    nil))
+
+(defn dehighlight-exploration-path [system target-exploration-path]
+  (let [exploration-path-sprite (f.component/get-phzr-sprite-from-entity system target-exploration-path)
+        exploration-path-tween (f.component/get-phzr-tween-from-entity system target-exploration-path)]
+    (if (and (:is-running exploration-path-tween) (not (:is-paused exploration-path-tween)))
+      (do
+        (p.tween/pause exploration-path-tween)
+        (p.core/pset! exploration-path-sprite :alpha unhighlighted-alpha))))
+  system)
+
+(defn dehighlight-all-exploration-paths [system]
+  (doseq [exploration-path (b.entity/get-all-entities-with-component system f.component/ExplorationPath)]
+      (dehighlight-exploration-path system exploration-path))
+  system)
+
+(defn highlight-exploration-path [system target-exploration-path]
+  (let [exploration-path-sprite (f.component/get-phzr-sprite-from-entity system target-exploration-path)
+        exploration-path-tween (f.component/get-phzr-tween-from-entity system target-exploration-path)]
+    (cond
+      (not (:is-running exploration-path-tween)) (p.tween/start exploration-path-tween)
+      (:is-paused exploration-path-tween) (p.tween/resume exploration-path-tween)))
+  (let [exploration-paths (b.entity/get-all-entities-with-component system f.component/ExplorationPath)]
+    (doseq [non-highlighted-exploration-path (remove #(= target-exploration-path %) exploration-paths)]
+      (dehighlight-exploration-path system non-highlighted-exploration-path)))
+  system)
+
 (defn process-one-game-tick [system delta]
-  (let [phzr-game (:phzr-game system)
-        dragged-party-member-sprite (->> (f.party-member/get-dragged-party-member system)
-                                         (f.component/get-phzr-sprite-from-entity system))
-        exploration-paths (b.entity/get-all-entities-with-component system f.component/ExplorationPath)]
-    (doseq [exploration-path exploration-paths]
-      (let [exploration-path-sprite (f.component/get-phzr-sprite-from-entity system exploration-path)
-            exploration-path-tween (f.component/get-phzr-tween-from-entity system exploration-path)]
-        (if (and dragged-party-member-sprite
-                 (p.sprite/overlap exploration-path-sprite dragged-party-member-sprite))
-          (cond
-            (not (:is-running exploration-path-tween)) (p.tween/start exploration-path-tween)
-            (:is-paused exploration-path-tween) (p.tween/resume exploration-path-tween))
-          (if (and (:is-running exploration-path-tween) (not (:is-paused exploration-path-tween)))
-            (do
-              (p.tween/pause exploration-path-tween)
-              (p.core/pset! exploration-path-sprite :alpha 0)))))))
   system)

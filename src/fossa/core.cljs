@@ -5,6 +5,7 @@
             [phzr.game :as p.game]
             [fossa.background :as f.background]
             [fossa.exploration-path :as f.exploration-path]
+            [fossa.group :as f.group]
             [fossa.party-member :as f.party-member]
             [fossa.rendering :as f.rendering]))
 
@@ -22,6 +23,7 @@
     (-> @*system*
         (doto (-> :phzr-game :input (p.core/pset! :max-pointers 1)))
         (f.background/create-entities)
+        (f.group/create-entities)
         (f.exploration-path/create-entities)
         (f.party-member/create-entities)
         (as-> s (reset! *system* s))))
@@ -48,8 +50,9 @@
     (p.game/destroy curr-game))
   (-> (b.entity/create-system)
       (assoc :phzr-game (get-new-phzr-game-object))
-      (b.system/add-system-fn f.party-member/process-one-game-tick)
       (b.system/add-system-fn f.exploration-path/process-one-game-tick)
+      (b.system/add-system-fn f.party-member/process-one-game-tick)
+      (b.system/add-system-fn f.group/process-one-game-tick)
       (as-> s (reset! *system* s))))
 
 (initialize-game!)

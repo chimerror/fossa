@@ -13,5 +13,6 @@
     (p.core/pset! :input-enabled true)
     (-> :input (set-drag-enabled true))))
 
+(def default-release-threshold 500)
 (defn just-released [phzr-sprite]
-  (-> phzr-sprite :input (p.input-handler/just-released nil nil))) ; Use main pointer, default threshold
+  (-> phzr-sprite :input (p.input-handler/just-released nil default-release-threshold))) ; Use main pointer, default threshold
