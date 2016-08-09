@@ -1,7 +1,7 @@
 Day Three: Et Tu, Brute!
 ========================
 
-Wednesday, August 2nd, 2016
+Wednesday, August 3rd, 2016
 ---------------------------
 
 I can't sleep, so I guess I'll write my journal entry.
