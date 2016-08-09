@@ -23,6 +23,7 @@
 
 ; Game components
 (defrecord Background[])
-(defrecord ExplorationPath [])
-(defrecord PartyMember [])
+(defrecord ExplorationPath [direction active])
+(defrecord PartyMember [is-liar])
 (defrecord UnassignedMembers [])
+(defrecord Dungeon [rooms current-room])

@@ -5,6 +5,7 @@
             [phzr.game :as p.game]
             [WebFont :as wf]
             [fossa.background :as f.background]
+            [fossa.dungeon :as f.dungeon]
             [fossa.exploration-path :as f.exploration-path]
             [fossa.group :as f.group]
             [fossa.party-member :as f.party-member]
@@ -27,6 +28,7 @@
         (f.group/create-entities)
         (f.exploration-path/create-entities)
         (f.party-member/create-entities)
+        (f.dungeon/create-entities)
         (as-> s (reset! *system* s))))
 
 (defn update-game! [game]

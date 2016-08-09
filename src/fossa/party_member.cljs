@@ -77,7 +77,7 @@
         (f.group/create-sprite-in-group group party-member party-member-name "mouse")
         (initialize-party-member-sprite party-member i)
         (create-party-member-label party-member (first party-member-name))
-        (b.entity/add-component party-member (f.component/->PartyMember)))))
+        (b.entity/add-component party-member (f.component/->PartyMember false)))))
 
 (defn create-party-members [system group]
   (loop [i 0 sys system]

@@ -58,6 +58,8 @@
 (def group-offset [25 30])
 (def group-coordinates (vec (map #(mapv + group-offset %) hex-coordinates)))
 
+(def directions [:north :northeast :southeast :south :southwest :northwest])
+
 (defn create-exploration-path [system i]
   (let [phzr-game (:phzr-game system)
         exploration-path (b.entity/create-entity)
@@ -66,13 +68,14 @@
         creation-point (group-coordinates i)
         x (creation-point 0)
         y (creation-point 1)
-        group-name (str (hex-names i) " group")]
+        group-name (str (hex-names i) " group")
+        direction (directions i)]
     (-> system
         (b.entity/add-entity exploration-path)
         (b.entity/add-component exploration-path (f.component/->Sprite sprite))
         (b.entity/add-component exploration-path (f.component/->Tween tween))
         (b.entity/add-component exploration-path (f.group/create-group phzr-game group-name x y))
-        (b.entity/add-component exploration-path (f.component/->ExplorationPath)))))
+        (b.entity/add-component exploration-path (f.component/->ExplorationPath direction true)))))
 
 (defn create-entities [system]
   (loop [i 0 sys system]
@@ -83,6 +86,7 @@
 (defn get-exploration-path-under-sprite [system sprite]
   (if sprite
     (->> (b.entity/get-all-entities-with-component system f.component/ExplorationPath)
+         (filter #(-> (b.entity/get-component system % f.component/ExplorationPath) :active))
          (filter #(-> (f.component/get-phzr-sprite-from-entity system %) (p.sprite/overlap sprite)))
          (first))
     nil))
@@ -111,6 +115,23 @@
     (doseq [non-highlighted-exploration-path (remove #(= target-exploration-path %) exploration-paths)]
       (dehighlight-exploration-path system non-highlighted-exploration-path)))
   system)
+
+(defn get-exploration-path-by-direction [system direction]
+  (->> (b.entity/get-all-entities-with-component system f.component/ExplorationPath)
+       (filter #(= direction (:direction (b.entity/get-component system % f.component/ExplorationPath))))
+       (first)))
+
+(defn update-exploration-path [system direction active]
+  (let [target-path (get-exploration-path-by-direction system direction)
+        target-path-sprite (f.component/get-phzr-sprite-from-entity system target-path)]
+    (p.core/pset! target-path-sprite :visible active)
+    (b.entity/add-component system target-path (f.component/->ExplorationPath direction active))))
+
+(defn update-exploration-paths [system active-paths]
+  (reduce
+    (fn [sys direction] (update-exploration-path sys direction (contains? active-paths direction)))
+    system
+    directions))
 
 (defn process-one-game-tick [system delta]
   system)
