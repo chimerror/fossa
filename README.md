@@ -64,11 +64,15 @@ License and Legal Information
 Copyright © 2016 Jason Mitchell.
 Distributed under [The MIT License](https://opensource.org/licenses/MIT).
 
+[brute](https://github.com/markmandel/brute) by [Mark Mandel](https://github.com/markmandel) is licensed
+under [The Eclipse Public License, version 1.0](https://eclipse.org/org/documents/epl-v10.html).
+
 [phzr](https://github.com/dparis/phzr) by [Dylan Paris](https://github.com/dparis) is licensed under
 [The MIT License](https://opensource.org/licenses/MIT).
 
-[brute](https://github.com/markmandel/brute) by [Mark Mandel](https://github.com/markmandel) is licensed
-under [The Eclipse Public License, version 1.0](https://eclipse.org/org/documents/epl-v10.html).
+[Web Font Loader](https://github.com/typekit/webfontloader) by [Google](https://www.google.com/) and
+[Typekit](https://typekit.com/) is licensed under
+[The Apache License, version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
 ["Artificial hive icon"](http://game-icons.net/lorc/originals/artificial-hive.html),
 ["Seated mouse icon"](http://game-icons.net/lorc/originals/seated-mouse.html),
