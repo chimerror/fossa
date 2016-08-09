@@ -41,7 +41,11 @@
                            :source-map-timestamp true
                            ;; To console.log CLJS data-structures make sure you enable devtools in Chrome
                            ;; https://github.com/binaryage/cljs-devtools
-                           :preloads [devtools.preload]}}
+                           :preloads [devtools.preload]
+                           :foreign-libs
+                             [{:file "resources/public/js/lib/webfont/webfont.js"
+                               :provides ["WebFont"]}]
+                             :externs ["resources/public/js/lib/webfont/externs.js"]}}
                ;; This next build is an compressed minified build for
                ;; production. You can build this with:
                ;; lein cljsbuild once min
@@ -50,7 +54,11 @@
                 :compiler {:output-to "resources/public/js/compiled/fossa.js"
                            :main fossa.core
                            :optimizations :advanced
-                           :pretty-print false}}]}
+                           :pretty-print false
+                           :foreign-libs
+                             [{:file "https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"
+                               :provides ["WebFont"]}]
+                             :externs ["resources/public/js/lib/webfont/externs.js"]}}]}
 
   :figwheel {;; :http-server-root "public" ;; default and assumes "resources"
              ;; :server-port 3449 ;; default

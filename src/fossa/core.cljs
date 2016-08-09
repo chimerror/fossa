@@ -3,6 +3,7 @@
             [brute.system :as b.system]
             [phzr.core :as p.core]
             [phzr.game :as p.game]
+            [WebFont :as wf]
             [fossa.background :as f.background]
             [fossa.exploration-path :as f.exploration-path]
             [fossa.group :as f.group]
@@ -55,6 +56,10 @@
       (b.system/add-system-fn f.group/process-one-game-tick)
       (as-> s (reset! *system* s))))
 
-(initialize-game!)
+(wf/load
+  (clj->js
+    {:google {:families ["Cutive"]}
+     :active initialize-game!
+     :inactive initialize-game!}))
 
 (defn on-js-reload [])

@@ -6,6 +6,7 @@
             [phzr.math :as p.math]
             [phzr.point :as p.point]
             [phzr.pointer :as p.pointer]
+            [phzr.sprite :as p.sprite]
             [fossa.component :as f.component]
             [fossa.exploration-path :as f.exploration-path]
             [fossa.group :as f.group]
@@ -37,12 +38,28 @@
    16r33a02c
    16rfb9a99
    16re31a1c
-   16rfdbf6f
+   16re9ad5e
    16rff7f00
    16rcab2d6
    16r6a3d9a
-   16rffff99
+   16rd3d471
    16rb15928])
+
+(defn create-party-member-label [system entity label-text]
+  (let [factory (-> system :phzr-game :add)
+        sprite (f.component/get-phzr-sprite-from-entity system entity)
+        phzr-text (p.factory/text factory 0 0 label-text)]
+    (p.sprite/add-child sprite phzr-text)
+    (doto phzr-text
+      (p.core/pset! :font "Cutive, Courier, MS Courier New, monospace")
+      (p.core/pset! :fill "#ffffff")
+      (p.core/pset! :word-wrap true)
+      (p.core/pset! :word-wrap-width (:width sprite))
+      (p.core/pset! :align "center")
+      (p.core/pset! :anchor (p.point/->Point 0.5 0.5))
+      (p.core/pset! :x 5)
+      (p.core/pset! :y 5)))
+  system)
 
 (defn initialize-party-member-sprite [system entity i]
   (doto (f.component/get-phzr-sprite-from-entity system entity)
@@ -59,6 +76,7 @@
         (b.entity/add-entity party-member)
         (f.group/create-sprite-in-group group party-member party-member-name "mouse")
         (initialize-party-member-sprite party-member i)
+        (create-party-member-label party-member (first party-member-name))
         (b.entity/add-component party-member (f.component/->PartyMember)))))
 
 (defn create-party-members [system group]
