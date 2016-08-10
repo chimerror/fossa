@@ -14,10 +14,10 @@
 (def initial-dungeon
   [{:paths #{ :north :south :southwest :southeast }
     :correct-path :southwest
-    :liars 0}
+    :liars 2}
    {:paths #{ :north :northeast :southeast }
     :correct-path :north
-    :liars 2}
+    :liars 1}
    {:paths #{ :south :northwest :southwest }
     :correct-path :northwest
     :liars 4}])
@@ -32,7 +32,8 @@
         current-room ((:rooms dungeon) (:current-room dungeon))]
     (-> system
         (f.exploration-path/update-exploration-paths (:paths current-room))
-        (f.group/move-all-members-back-to-unassigned))))
+        (f.group/move-all-members-back-to-unassigned)
+        (f.party-member/set-liars (:liars current-room)))))
 
 (defn create-explore-button [system]
   (let [phzr-game (:phzr-game system)

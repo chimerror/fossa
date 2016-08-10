@@ -150,9 +150,25 @@
           (p.core/pset! sprite :frame 0))))
     system))
 
-(defn get-party-member-groups [system]
-  (let [party-members (b.entity/get-all-entities-with-component system f.component/PartyMember)]
-    (map #(f.group/get-group-containing-member system %) party-members)))
+(defn set-liars [system number-of-liars]
+  (let [party-members (b.entity/get-all-entities-with-component system f.component/PartyMember)
+        grouped-members (group-by #(:is-liar (b.entity/get-component system % f.component/PartyMember))
+                                  party-members)
+        liars (get grouped-members true)
+        number-of-existing-liars (count liars)
+        liars-needed (- number-of-liars number-of-existing-liars)]
+    (if (> liars-needed 0)
+      (let [new-liars (take liars-needed (shuffle (get grouped-members false)))]
+        (reduce
+          (fn [system new-liar] (b.entity/add-component system new-liar
+                                                        (f.component/->PartyMember true)))
+          system new-liars))
+      system))) ; Note we never reduce the number of liars!
+
+(defn TEMP-get-liars [system]
+  (->> (b.entity/get-all-entities-with-component system f.component/PartyMember)
+       (filter #(:is-liar (b.entity/get-component system % f.component/PartyMember)))
+       (map #(-> (b.entity/get-component system % f.component/Sprite) :phzr-sprite :name))))
 
 (defn process-one-game-tick [system delta]
   (-> system
