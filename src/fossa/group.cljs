@@ -64,7 +64,6 @@
         next-position (group-grid-positions next-index)
         next-x (next-position 0)
         next-y (next-position 1)]
-    ;(println member-entity " moves from " old-group-entity " to " new-group-entity " at " next-x ", " next-y)
     (p.group/remove-child old-phzr-group member-sprite)
     (p.group/add-child new-phzr-group member-sprite)
     (f.rendering/position-within-group new-phzr-group member-sprite (p.point/->Point next-x next-y))
@@ -83,6 +82,11 @@
 (defn get-unassigned-members-entity [system]
   (-> (b.entity/get-all-entities-with-component system f.component/UnassignedMembers)
       (first)))
+
+(defn move-all-members-back-to-unassigned [system]
+  (let [party-members (b.entity/get-all-entities-with-component system f.component/PartyMember)
+        unassigned-members (get-unassigned-members-entity system)]
+    (reduce #(move-member-to-group %1 %2 unassigned-members) system party-members)))
 
 (defn create-entities [system]
   (let [phzr-game (:phzr-game system)

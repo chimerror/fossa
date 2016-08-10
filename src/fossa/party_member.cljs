@@ -138,6 +138,17 @@
         system))
     system))
 
+(defn redraw-unassigned-party-members [system]
+  (let [party-members (b.entity/get-all-entities-with-component system f.component/PartyMember)]
+    (doseq [party-member party-members]
+      (let [sprite (f.component/get-phzr-sprite-from-entity system party-member)
+            group (f.group/get-group-containing-member system party-member)
+            unassigned-group (f.group/get-unassigned-members-entity system)]
+        (when (and (not (-> sprite :input :is-dragged)) (= group unassigned-group))
+          (p.core/pset! sprite :rotation 0)
+          (p.core/pset! sprite :frame 0))))
+    system))
+
 (defn get-party-member-groups [system]
   (let [party-members (b.entity/get-all-entities-with-component system f.component/PartyMember)]
     (map #(f.group/get-group-containing-member system %) party-members)))
@@ -145,5 +156,5 @@
 (defn process-one-game-tick [system delta]
   (-> system
       (handle-dragged-party-member)
-      (handle-released-party-member)))
-      ;(as-> s (do (println (distinct (get-party-member-groups s))) s))))
+      (handle-released-party-member)
+      (redraw-unassigned-party-members)))

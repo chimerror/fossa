@@ -15,4 +15,8 @@
 
 (def default-release-threshold 500)
 (defn just-released [phzr-sprite]
-  (-> phzr-sprite :input (p.input-handler/just-released nil default-release-threshold))) ; Use main pointer, default threshold
+  (-> phzr-sprite :input (p.input-handler/just-released nil default-release-threshold))) ; Use main pointer
+
+(def default-pressed-threshold 500)
+(defn just-pressed [phzr-sprite]
+  (-> phzr-sprite :input (p.input-handler/just-pressed nil default-pressed-threshold))) ; Use main pointer

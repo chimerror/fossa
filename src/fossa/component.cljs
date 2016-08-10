@@ -27,3 +27,4 @@
 (defrecord PartyMember [is-liar])
 (defrecord UnassignedMembers [])
 (defrecord Dungeon [rooms current-room])
+(defrecord ExploreButton [phzr-button])

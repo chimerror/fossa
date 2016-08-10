@@ -19,7 +19,8 @@
     (-> (:load phzr-game)
         (f.background/preload-assets)
         (f.exploration-path/preload-assets)
-        (f.party-member/preload-assets)))
+        (f.party-member/preload-assets)
+        (f.dungeon/preload-assets)))
 
 (defn create-game! [_]
     (-> @*system*
@@ -56,6 +57,7 @@
       (b.system/add-system-fn f.exploration-path/process-one-game-tick)
       (b.system/add-system-fn f.party-member/process-one-game-tick)
       (b.system/add-system-fn f.group/process-one-game-tick)
+      (b.system/add-system-fn f.dungeon/process-one-game-tick)
       (as-> s (reset! *system* s))))
 
 (wf/load
