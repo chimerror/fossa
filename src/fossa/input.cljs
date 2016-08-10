@@ -13,10 +13,17 @@
     (p.core/pset! :input-enabled true)
     (-> :input (set-drag-enabled true))))
 
-(def default-release-threshold 500)
+(def default-input-threshold 500)
 (defn just-released [phzr-sprite]
-  (-> phzr-sprite :input (p.input-handler/just-released nil default-release-threshold))) ; Use main pointer
+  (-> phzr-sprite :input (p.input-handler/just-released nil default-input-threshold))) ; Use main pointer
 
-(def default-pressed-threshold 500)
 (defn just-pressed [phzr-sprite]
-  (-> phzr-sprite :input (p.input-handler/just-pressed nil default-pressed-threshold))) ; Use main pointer
+  (-> phzr-sprite :input (p.input-handler/just-pressed nil default-input-threshold))) ; Use main pointer
+
+(defn update-blackout-property [system blackout-key]
+  (assoc system blackout-key (-> system :phzr-game :time :events :ms)))
+
+(defn blackout-expired? [system blackout-key]
+  (let [current-time (-> system :phzr-game :time :events :ms)
+        blackout-time (blackout-key system)]
+    (or (nil? blackout-time) (> (- current-time blackout-time) default-input-threshold))))

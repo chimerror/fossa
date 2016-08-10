@@ -94,10 +94,12 @@
        (first)))
 
 (defn get-released-party-member [system]
-  (->> (b.entity/get-all-entities-with-component system f.component/PartyMember)
-       (filter #(-> (f.component/get-phzr-sprite-from-entity system %)
-                    (f.input/just-released)))
-       (first)))
+  (if (f.input/blackout-expired? system :just-released-blackout)
+    (->> (b.entity/get-all-entities-with-component system f.component/PartyMember)
+         (filter #(-> (f.component/get-phzr-sprite-from-entity system %)
+                      (f.input/just-released)))
+         (first))
+    nil))
 
 (def rotate-point (p.point/->Point 360 275))
 (def rotate-adjustment 2.7488935718910690836548129603696)
@@ -127,15 +129,14 @@
           target-path (f.exploration-path/get-exploration-path-under-sprite system released-sprite)]
       (f.exploration-path/dehighlight-all-exploration-paths system)
       (p.core/pset! released-sprite :rotation 0)
-      (when (nil? target-path)
-        (p.core/pset! released-sprite :frame 0))
-      (cond
-        (and target-path (not= target-path original-group))
-        (f.group/move-member-to-group system released-party-member target-path)
-        (and (nil? target-path) was-assigned)
-        (f.group/move-member-to-group system released-party-member unassigned-group)
-        :else ; Do nothing. Group will handle drawing it.
-        system))
+      (-> (cond
+            (and target-path (not= target-path original-group))
+            (f.group/move-member-to-group system released-party-member target-path)
+            (and (nil? target-path) was-assigned)
+            (f.group/move-member-to-group system released-party-member unassigned-group)
+            :else ; Do nothing. Group will handle drawing it.
+            system)
+          (f.input/update-blackout-property :just-released-blackout))) ; TODO: Yech, this is ugly!
     system))
 
 (defn redraw-unassigned-party-members [system]

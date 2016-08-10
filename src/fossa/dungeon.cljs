@@ -78,6 +78,9 @@
         unassigned-group (f.group/get-unassigned-members-entity system)
         unassigned-members (f.component/get-group-members-from-entity system unassigned-group)]
     (p.core/pset! (:phzr-button explore-button) :visible (empty? unassigned-members))
-    (if (f.input/just-pressed (:phzr-button explore-button))
-      (move-to-next-room system)
+    (if (and (f.input/blackout-expired? system :just-pressed-blackout)
+             (f.input/just-pressed (:phzr-button explore-button)))
+      (-> system
+          (f.input/update-blackout-property :just-pressed-blackout)
+          (move-to-next-room))
       system))) ; TODO: Actually do exploration instead of moving on.
