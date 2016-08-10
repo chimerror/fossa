@@ -29,7 +29,12 @@
 ; Game components
 (defrecord Background[])
 (defrecord ExplorationPath [direction active])
-(defrecord PartyMember [is-liar])
+
+(defrecord PartyMember [member-name is-liar])
+(defn get-member-name-from-entity [system entity]
+  (-> (b.entity/get-component system entity PartyMember)
+      :member-name))
+
 (defrecord UnassignedMembers [])
 (defrecord Dungeon [rooms current-room])
 (defrecord ExploreButton [phzr-button])

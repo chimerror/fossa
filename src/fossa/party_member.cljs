@@ -78,7 +78,7 @@
         (f.group/create-sprite-in-group group party-member party-member-name "mouse")
         (initialize-party-member-sprite party-member i)
         (create-party-member-label party-member (first party-member-name))
-        (b.entity/add-component party-member (f.component/->PartyMember false)))))
+        (b.entity/add-component party-member (f.component/->PartyMember party-member-name false)))))
 
 (defn create-party-members [system group]
   (loop [i 0 sys system]
@@ -161,8 +161,11 @@
     (if (> liars-needed 0)
       (let [new-liars (take liars-needed (shuffle (get grouped-members false)))]
         (reduce
-          (fn [system new-liar] (b.entity/add-component system new-liar
-                                                        (f.component/->PartyMember true)))
+          (fn [system new-liar]
+            (b.entity/add-component
+              system
+              new-liar
+              (f.component/->PartyMember (f.component/get-member-name-from-entity system new-liar) true)))
           system new-liars))
       system))) ; Note we never reduce the number of liars!
 
