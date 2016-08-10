@@ -9,10 +9,11 @@
 
 (defn create-phzr-group [phzr-game group-name x y]
   (let [factory (:add phzr-game)
-        stage (:stage phzr-game)]
-    (doto (p.factory/group factory stage group-name)
+        world (:world phzr-game)]
+    (doto (p.factory/group factory world group-name)
       (p.core/pset! :x x)
-      (p.core/pset! :y y))))
+      (p.core/pset! :y y)
+      (p.core/pset! :z 16r20))))
 
 (defn create-group [phzr-game group-name x y]
   (f.component/->Group (create-phzr-group phzr-game group-name x y) []))

@@ -49,7 +49,8 @@
     ; Note that it's not created within the group. The group is only for party-members
     (doto (f.rendering/create-phzr-sprite phzr-game sprite-name "hexagon" x y)
       (p.core/pset! :tint sprite-tint)
-      (p.core/pset! :alpha unhighlighted-alpha))))
+      (p.core/pset! :alpha unhighlighted-alpha)
+      (p.core/pset! :z 16r10))))
 
 (def tween-duration 250)
 (defn create-tween [phzr-game sprite]

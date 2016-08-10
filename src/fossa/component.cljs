@@ -12,6 +12,11 @@
   (-> (b.entity/get-component system entity Tween)
       :phzr-tween))
 
+(defrecord Text [phzr-text])
+(defn get-phzr-text-from-entity [system entity]
+  (-> (b.entity/get-component system entity Text)
+      :phzr-text))
+
 ; Hybrid components
 (defrecord Group [phzr-group members])
 (defn get-phzr-group-from-entity [system entity]
@@ -28,3 +33,4 @@
 (defrecord UnassignedMembers [])
 (defrecord Dungeon [rooms current-room])
 (defrecord ExploreButton [phzr-button])
+(defrecord ExplorationResults [previous-results])

@@ -62,7 +62,7 @@
 
 (wf/load
   (clj->js
-    {:google {:families ["Cutive"]}
+    {:google {:families ["Cutive", "Just Me Again Down Here"]}
      :active initialize-game!
      :inactive initialize-game!}))
 

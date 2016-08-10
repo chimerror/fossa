@@ -58,7 +58,8 @@
       (p.core/pset! :align "center")
       (p.core/pset! :anchor (p.point/->Point 0.5 0.5))
       (p.core/pset! :x 5)
-      (p.core/pset! :y 5)))
+      (p.core/pset! :y 5)
+      (p.core/pset! :z 16r30)))
   system)
 
 (defn initialize-party-member-sprite [system entity i]
