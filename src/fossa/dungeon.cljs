@@ -185,7 +185,7 @@
         (b.entity/add-component exploration-results (f.component/->ExplorationResults []))
         (create-movement-buttons))))
 
-(defn move-to-next-room [system]
+(defn move-to-next-room [system direction]
   (let [dungeon-entity (first (b.entity/get-all-entities-with-component system f.component/Dungeon))
         dungeon (b.entity/get-component system dungeon-entity f.component/Dungeon)]
     (-> system
@@ -313,10 +313,15 @@
 (defn handle-movement-buttons [system]
   (let [phzr-game (:phzr-game system)
         {:keys [movement-buttons]} (f.component/get-singleton-component system f.component/MovementButtons)
+        direction-pressed (get (first (filter #(f.input/just-pressed (get % 1)) movement-buttons)) 0)
         {:keys [paths safe-path]} (get-current-dungeon-room system)]
     (doseq [[direction button] movement-buttons]
       (p.core/pset! button :visible (paths direction)))
-    system))
+    (if (and (f.input/blackout-expired? system :just-pressed-movement-button) direction-pressed)
+      (-> system
+          (f.input/update-blackout-property :just-pressed-movement-button)
+          (move-to-next-room direction-pressed))
+      system)))
 
 (defn process-one-game-tick [system]
   (-> system
