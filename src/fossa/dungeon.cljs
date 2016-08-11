@@ -115,6 +115,21 @@
       (p.core/pset! :x 145))
     (f.component/->ResultsNavigation 0 previous-text next-text)))
 
+(defn create-results-button [system]
+  (let [phzr-game (:phzr-game system)
+        factory (:add phzr-game)
+        phzr-button (p.factory/button factory 0 526 "button" nil nil 0 0 1 0)
+        phzr-text (p.factory/text factory 0 0 "Results")]
+    (p.button/add-child phzr-button phzr-text)
+    (doto phzr-text
+      (p.core/pset! :font "Cutive, Courier, MS Courier New, monospace")
+      (p.core/pset! :fill "#000000")
+      (p.core/pset! :align "center")
+      (p.core/pset! :anchor (p.point/->Point 0.5 0.5))
+      (p.core/pset! :x 95)
+      (p.core/pset! :y 25))
+    phzr-button))
+
 (defn create-movement-button-icon [factory button i]
   (let [button-icon (p.factory/sprite factory 0 0 "direction-arrows" i)]
     (p.button/add-child button button-icon)))
@@ -172,7 +187,9 @@
         exploration-results (b.entity/create-entity)
         exploration-results-sprite (create-exploration-results-sprite system)
         exploration-results-text (create-exploration-results-text system exploration-results-sprite)
-        results-navigation (create-exploration-results-navigation system exploration-results-sprite)]
+        results-navigation (create-exploration-results-navigation system exploration-results-sprite)
+        results-button-entity (b.entity/create-entity)
+        results-button (create-results-button system)]
     (-> system
         (b.entity/add-entity dungeon)
         (b.entity/add-component dungeon (f.component/->Dungeon initial-dungeon 0))
@@ -184,6 +201,8 @@
         (b.entity/add-component exploration-results (f.component/->Text exploration-results-text))
         (b.entity/add-component exploration-results results-navigation)
         (b.entity/add-component exploration-results (f.component/->ExplorationResults []))
+        (b.entity/add-entity results-button-entity)
+        (b.entity/add-component results-button-entity (f.component/->ResultsButton results-button))
         (create-movement-buttons))))
 
 (defn get-explore-button-entity [system]
@@ -304,6 +323,25 @@
           (update-results-navigation)))
       system)))
 
+(defn handle-results-button [system]
+  (let [{:keys [phzr-button]} (f.component/get-singleton-component system f.component/ResultsButton)
+        exploration-result-count (count (:previous-results (f.component/get-singleton-component system f.component/ExplorationResults)))
+        exploration-results-sprite (:phzr-sprite (f.component/get-singleton-component system f.component/ExplorationResults f.component/Sprite))
+        results-navigation-entity (first (b.entity/get-all-entities-with-component system f.component/ResultsNavigation))
+        {:keys [current-result] :as results-navigation} (b.entity/get-component system results-navigation-entity f.component/ResultsNavigation)]
+    (p.core/pset! phzr-button :visible (and (not (:visible exploration-results-sprite))
+                                            (> exploration-result-count 0)))
+    (if (and (f.input/blackout-expired? system :just-pressed-results-button)
+             (f.input/just-pressed phzr-button))
+      (-> system
+          (f.input/update-blackout-property :just-pressed-results-button)
+          (as-> sys (do (p.core/pset! exploration-results-sprite :visible true) sys))
+          (b.entity/add-component results-navigation-entity
+                                  (assoc results-navigation
+                                         :current-result (dec exploration-result-count)))
+          (update-results-navigation))
+          system)))
+
 (defn move-to-next-room [system direction]
   (let [dungeon-entity (first (b.entity/get-all-entities-with-component system f.component/Dungeon))
         dungeon (b.entity/get-component system dungeon-entity f.component/Dungeon)]
@@ -331,6 +369,7 @@
 
 (defn process-one-game-tick [system]
   (-> system
+      (handle-results-button)
       (handle-explore-button)
       (handle-results-navigation)
       (handle-movement-buttons)))

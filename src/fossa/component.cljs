@@ -55,3 +55,4 @@
 (defrecord Dungeon [rooms current-room])
 (defrecord ExploreButton [phzr-button])
 (defrecord ExplorationResults [previous-results])
+(defrecord ResultsButton [phzr-button])
