@@ -160,6 +160,7 @@
         group (f.group/create-phzr-group phzr-game "movement buttons" 600 415)
         button-map (reduce #(create-movement-button %1 %2 factory group) {} (range 6))
         entity (b.entity/create-entity)]
+    (p.core/pset! group :z 16r30)
     (-> system
         (b.entity/add-entity entity)
         (b.entity/add-component entity (f.component/->MovementButtons button-map group)))))
@@ -184,14 +185,6 @@
         (b.entity/add-component exploration-results results-navigation)
         (b.entity/add-component exploration-results (f.component/->ExplorationResults []))
         (create-movement-buttons))))
-
-(defn move-to-next-room [system direction]
-  (let [dungeon-entity (first (b.entity/get-all-entities-with-component system f.component/Dungeon))
-        dungeon (b.entity/get-component system dungeon-entity f.component/Dungeon)]
-    (-> system
-        (b.entity/add-component dungeon-entity
-                                (f.component/->Dungeon (:rooms dungeon) (inc (:current-room dungeon))))
-        (initialize-dungeon))))
 
 (defn get-explore-button-entity [system]
   (-> (b.entity/get-all-entities-with-component system f.component/ExploreButton)
@@ -269,6 +262,7 @@
     (p.core/pset! exploration-results-text :text exploration-results-string)
     (p.core/pset! exploration-results-sprite :visible true)
     (-> system
+        (assoc :explored-this-turn true)
         (b.entity/add-component exploration-results-entity
           (f.component/->ExplorationResults (conj previous-results exploration-results-map)))
         (b.entity/add-component results-navigation-entity
@@ -310,11 +304,21 @@
           (update-results-navigation)))
       system)))
 
+(defn move-to-next-room [system direction]
+  (let [dungeon-entity (first (b.entity/get-all-entities-with-component system f.component/Dungeon))
+        dungeon (b.entity/get-component system dungeon-entity f.component/Dungeon)]
+    (-> system
+        (assoc :explored-this-turn false)
+        (b.entity/add-component dungeon-entity
+                                (f.component/->Dungeon (:rooms dungeon) (inc (:current-room dungeon))))
+        (initialize-dungeon))))
+
 (defn handle-movement-buttons [system]
   (let [phzr-game (:phzr-game system)
-        {:keys [movement-buttons]} (f.component/get-singleton-component system f.component/MovementButtons)
+        {:keys [movement-buttons group]} (f.component/get-singleton-component system f.component/MovementButtons)
         direction-pressed (get (first (filter #(f.input/just-pressed (get % 1)) movement-buttons)) 0)
         {:keys [paths safe-path]} (get-current-dungeon-room system)]
+    (p.core/pset! group :visible (:explored-this-turn system))
     (doseq [[direction button] movement-buttons]
       (p.core/pset! button :visible (paths direction)))
     (if (and (f.input/blackout-expired? system :just-pressed-movement-button) direction-pressed)
