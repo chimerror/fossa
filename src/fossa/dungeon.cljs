@@ -251,10 +251,12 @@
     (p.core/pset! exploration-results-text :text new-text)
     system))
 
+(defn get-current-dungeon-room [system]
+  (let [{:keys [rooms current-room]} (f.component/get-singleton-component system f.component/Dungeon)]
+    (rooms current-room)))
+
 (defn do-exploration [system]
-  (let [dungeon-entity (first (b.entity/get-all-entities-with-component system f.component/Dungeon))
-        dungeon (b.entity/get-component system dungeon-entity f.component/Dungeon)
-        current-room ((:rooms dungeon) (:current-room dungeon))
+  (let [current-room (get-current-dungeon-room system)
         exploration-results-map (explore-paths system (:paths current-room) (:safe-path current-room))
         exploration-results-string (get-exploration-text exploration-results-map)
         exploration-results-entity (first (b.entity/get-all-entities-with-component system f.component/ExplorationResults))
@@ -308,7 +310,16 @@
           (update-results-navigation)))
       system)))
 
+(defn handle-movement-buttons [system]
+  (let [phzr-game (:phzr-game system)
+        {:keys [movement-buttons]} (f.component/get-singleton-component system f.component/MovementButtons)
+        {:keys [paths safe-path]} (get-current-dungeon-room system)]
+    (doseq [[direction button] movement-buttons]
+      (p.core/pset! button :visible (paths direction)))
+    system))
+
 (defn process-one-game-tick [system]
   (-> system
       (handle-explore-button)
-      (handle-results-navigation)))
+      (handle-results-navigation)
+      (handle-movement-buttons)))
