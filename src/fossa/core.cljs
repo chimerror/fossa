@@ -54,6 +54,7 @@
     (p.game/destroy curr-game))
   (-> (b.entity/create-system)
       (assoc :phzr-game (get-new-phzr-game-object))
+      (b.system/add-system-fn f.background/process-one-game-tick)
       (b.system/add-system-fn f.exploration-path/process-one-game-tick)
       (b.system/add-system-fn f.party-member/process-one-game-tick)
       (b.system/add-system-fn f.group/process-one-game-tick)

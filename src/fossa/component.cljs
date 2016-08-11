@@ -17,6 +17,8 @@
   (-> (b.entity/get-component system entity Text)
       :phzr-text))
 
+(defrecord ResultsNavigation [current-result previous-text next-text])
+
 ; Hybrid components
 (defrecord Group [phzr-group members])
 (defn get-phzr-group-from-entity [system entity]

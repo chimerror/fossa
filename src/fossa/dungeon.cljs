@@ -61,6 +61,7 @@
       (p.core/pset! :anchor (p.point/->Point 0.5 0.5))
       (p.core/pset! :angle -15)
       (p.core/pset! :input-enabled true)
+      (-> :input (p.core/pset! :priority-id 0))
       (-> :events :on-input-down (p.signal/add (fn [sprite _] (p.core/pset! sprite :visible false))))
       (p.core/pset! :visible false)
       (p.core/pset! :z 16r40))))
@@ -88,13 +89,38 @@
       (p.core/pset! :x -270)
       (p.core/pset! :y -460))))
 
+(defn create-exploration-results-navigation [system sprite]
+  (let [phzr-game (:phzr-game system)
+        factory (:add phzr-game)
+        previous-text (p.factory/text factory 0 0 "<Previous")
+        next-text (p.factory/text factory 0 0 "Next>")]
+    (doseq [text [previous-text next-text]]
+    (p.sprite/add-child sprite text)
+    (doto text
+      (p.core/pset! :font "Just Me Again Down Here, MV Boli, Apple Chancery, Zapfino, cursive")
+      (p.core/pset! :font-size 60)
+      (p.core/pset! :fill "#0000ff")
+      (-> :events :on-input-over (p.signal/add (fn [sprite _] (p.core/pset! sprite :fill "#ff0000"))))
+      (-> :events :on-input-out (p.signal/add (fn [sprite _] (p.core/pset! sprite :fill "#0000ff"))))
+      (p.core/pset! :input-enabled true)
+      (-> :input (p.core/pset! :priority-id 1))
+      (p.core/pset! :y -525)))
+    (doto previous-text
+      (p.core/pset! :align "left")
+      (p.core/pset! :x -270))
+    (doto next-text
+      (p.core/pset! :align "right")
+      (p.core/pset! :x 145))
+    (f.component/->ResultsNavigation 0 previous-text next-text)))
+
 (defn create-entities [system]
   (let [dungeon (b.entity/create-entity)
         explore-button (b.entity/create-entity)
         explore-phzr-button (create-explore-button system)
         exploration-results (b.entity/create-entity)
         exploration-results-sprite (create-exploration-results-sprite system)
-        exploration-results-text (create-exploration-results-text system exploration-results-sprite)]
+        exploration-results-text (create-exploration-results-text system exploration-results-sprite)
+        results-navigation (create-exploration-results-navigation system exploration-results-sprite)]
     (-> system
         (b.entity/add-entity dungeon)
         (b.entity/add-component dungeon (f.component/->Dungeon initial-dungeon 0))
@@ -104,7 +130,8 @@
         (b.entity/add-entity exploration-results)
         (b.entity/add-component exploration-results (f.component/->Sprite exploration-results-sprite))
         (b.entity/add-component exploration-results (f.component/->Text exploration-results-text))
-        (b.entity/add-component exploration-results (f.component/->ExplorationResults '())))))
+        (b.entity/add-component exploration-results results-navigation)
+        (b.entity/add-component exploration-results (f.component/->ExplorationResults [])))))
 
 (defn move-to-next-room [system]
   (let [dungeon-entity (first (b.entity/get-all-entities-with-component system f.component/Dungeon))
@@ -160,6 +187,18 @@
   (let [lines (map get-direction-result results-map)]
     (apply str lines)))
 
+(defn update-results-navigation [system]
+  (let [results-navigation (first (b.entity/get-all-entities-with-component system f.component/ResultsNavigation))
+        {:keys [current-result previous-text next-text]} (b.entity/get-component system results-navigation f.component/ResultsNavigation)
+        exploration-results-entity (first (b.entity/get-all-entities-with-component system f.component/ExplorationResults))
+        exploration-results (:previous-results (b.entity/get-component system exploration-results-entity f.component/ExplorationResults))
+        exploration-results-text (f.component/get-phzr-text-from-entity system exploration-results-entity)
+        new-text (get-exploration-text (get exploration-results current-result))]
+    (p.core/pset! previous-text :visible (not= current-result 0))
+    (p.core/pset! next-text :visible (not= current-result (dec (count exploration-results))))
+    (p.core/pset! exploration-results-text :text new-text)
+    system))
+
 (defn do-exploration [system]
   (let [dungeon-entity (first (b.entity/get-all-entities-with-component system f.component/Dungeon))
         dungeon (b.entity/get-component system dungeon-entity f.component/Dungeon)
@@ -168,24 +207,56 @@
         exploration-results-string (get-exploration-text exploration-results-map)
         exploration-results-entity (first (b.entity/get-all-entities-with-component system f.component/ExplorationResults))
         exploration-results-component (b.entity/get-component system exploration-results-entity f.component/ExplorationResults)
+        previous-results (:previous-results exploration-results-component)
         exploration-results-sprite (f.component/get-phzr-sprite-from-entity system exploration-results-entity)
-        exploration-results-text (f.component/get-phzr-text-from-entity system exploration-results-entity)]
+        exploration-results-text (f.component/get-phzr-text-from-entity system exploration-results-entity)
+        results-navigation-entity (first (b.entity/get-all-entities-with-component system f.component/ResultsNavigation))
+        {:keys [previous-text next-text]} (b.entity/get-component system results-navigation-entity f.component/ResultsNavigation)]
     (p.core/pset! exploration-results-text :text exploration-results-string)
     (p.core/pset! exploration-results-sprite :visible true)
     (-> system
-        (b.entity/add-component
-          exploration-results-entity
-          (f.component/->ExplorationResults (conj (:previous-results exploration-results-component) exploration-results-map))))))
+        (b.entity/add-component exploration-results-entity
+          (f.component/->ExplorationResults (conj previous-results exploration-results-map)))
+        (b.entity/add-component results-navigation-entity
+                                (f.component/->ResultsNavigation (count previous-results) previous-text next-text))
+        (update-results-navigation))))
 
-(defn process-one-game-tick [system]
+(defn handle-explore-button [system]
   (let [explore-button-entity (get-explore-button-entity system)
         explore-button (b.entity/get-component system explore-button-entity f.component/ExploreButton)
         unassigned-group (f.group/get-unassigned-members-entity system)
-        unassigned-members (f.component/get-group-members-from-entity system unassigned-group)]
-    (p.core/pset! (:phzr-button explore-button) :visible (empty? unassigned-members))
+        unassigned-members (f.component/get-group-members-from-entity system unassigned-group)
+        exploration-results-entity (first (b.entity/get-all-entities-with-component system f.component/ExplorationResults))
+        exploration-results-sprite (f.component/get-phzr-sprite-from-entity system exploration-results-entity)]
+    (p.core/pset! (:phzr-button explore-button) :visible (and (empty? unassigned-members)
+                                                              (not (:visible exploration-results-sprite))))
     (if (and (f.input/blackout-expired? system :just-pressed-blackout)
              (f.input/just-pressed (:phzr-button explore-button)))
       (-> system
           (f.input/update-blackout-property :just-pressed-blackout)
           (do-exploration))
-      system))) ; TODO: Actually do exploration instead of moving on.
+      system)))
+
+(defn handle-results-navigation [system]
+  (let [results-navigation-entity (first (b.entity/get-all-entities-with-component system f.component/ResultsNavigation))
+        {:keys [current-result previous-text next-text]} (b.entity/get-component system results-navigation-entity f.component/ResultsNavigation)
+        previous-pressed (f.input/just-pressed previous-text)
+        next-pressed (f.input/just-pressed next-text)
+        exploration-results-entity (first (b.entity/get-all-entities-with-component system f.component/ExplorationResults))
+        exploration-results-count (count (:previous-results (b.entity/get-component system exploration-results-entity f.component/ExplorationResults)))]
+    (if (and (f.input/blackout-expired? system :just-pressed-results-nav)
+             (or previous-pressed next-pressed))
+      (let [updated-result (if previous-pressed
+                             (max (dec current-result) 0)
+                             (min (inc current-result) (dec exploration-results-count)))]
+      (-> system
+          (f.input/update-blackout-property :just-pressed-results-nav)
+          (b.entity/add-component results-navigation-entity
+                                  (f.component/->ResultsNavigation updated-result previous-text next-text))
+          (update-results-navigation)))
+      system)))
+
+(defn process-one-game-tick [system]
+  (-> system
+      (handle-explore-button)
+      (handle-results-navigation)))
