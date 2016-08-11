@@ -187,6 +187,7 @@
         exploration-results (b.entity/create-entity)
         exploration-results-sprite (create-exploration-results-sprite system)
         exploration-results-text (create-exploration-results-text system exploration-results-sprite)
+        movement-results (b.entity/create-entity)
         results-navigation (create-exploration-results-navigation system exploration-results-sprite)
         results-button-entity (b.entity/create-entity)
         results-button (create-results-button system)]
@@ -201,6 +202,8 @@
         (b.entity/add-component exploration-results (f.component/->Text exploration-results-text))
         (b.entity/add-component exploration-results results-navigation)
         (b.entity/add-component exploration-results (f.component/->ExplorationResults []))
+        (b.entity/add-entity movement-results)
+        (b.entity/add-component movement-results (f.component/->MovementResults {}))
         (b.entity/add-entity results-button-entity)
         (b.entity/add-component results-button-entity (f.component/->ResultsButton results-button))
         (create-movement-buttons))))
@@ -343,9 +346,17 @@
           system)))
 
 (defn move-to-next-room [system direction]
-  (let [dungeon-entity (first (b.entity/get-all-entities-with-component system f.component/Dungeon))
-        dungeon (b.entity/get-component system dungeon-entity f.component/Dungeon)]
+  (let [dungeon (f.component/get-singleton-component system f.component/Dungeon)
+        dungeon-entity (f.component/get-singleton-entity system f.component/Dungeon)
+        {:keys [paths safe-path]} (get-current-dungeon-room system)
+        movement-results-entity (f.component/get-singleton-entity system f.component/MovementResults)
+        movement-results (:previous-results (f.component/get-singleton-component system f.component/MovementResults))
+        current-exploration (dec (count (:previous-results (f.component/get-singleton-component system f.component/ExplorationResults))))
+        move-is-safe? (= direction safe-path)
+        new-results (assoc movement-results current-exploration {:direction direction :was-safe? move-is-safe?})]
     (-> system
+        (b.entity/add-component movement-results-entity
+                                (f.component/->MovementResults new-results))
         (assoc :explored-this-turn false)
         (b.entity/add-component dungeon-entity
                                 (f.component/->Dungeon (:rooms dungeon) (inc (:current-room dungeon))))

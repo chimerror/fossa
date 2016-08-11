@@ -1,16 +1,15 @@
 (ns fossa.component
   (:require [brute.entity :as b.entity]))
 
-(defn get-singleton-component
-  ([system component]
-   (-> system
-       (b.entity/get-all-entities-with-component component)
-       (first)
-       (as-> entity (b.entity/get-component system entity component))))
-  ([system singleton-type component-type]
+(defn get-singleton-entity [system singleton-type]
    (-> system
        (b.entity/get-all-entities-with-component singleton-type)
-       (first)
+       (first)))
+
+(defn get-singleton-component
+  ([system singleton-type] (get-singleton-component system singleton-type singleton-type))
+  ([system singleton-type component-type]
+   (-> (get-singleton-entity system singleton-type)
        (as-> entity (b.entity/get-component system entity component-type)))))
 
 ; Rendering components
@@ -55,4 +54,5 @@
 (defrecord Dungeon [rooms current-room])
 (defrecord ExploreButton [phzr-button])
 (defrecord ExplorationResults [previous-results])
+(defrecord MovementResults [previous-results])
 (defrecord ResultsButton [phzr-button])
