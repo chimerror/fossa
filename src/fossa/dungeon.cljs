@@ -315,10 +315,12 @@
 
 (defn handle-movement-buttons [system]
   (let [phzr-game (:phzr-game system)
+        exploration-results-sprite (:phzr-sprite (f.component/get-singleton-component system f.component/ExplorationResults f.component/Sprite))
         {:keys [movement-buttons group]} (f.component/get-singleton-component system f.component/MovementButtons)
         direction-pressed (get (first (filter #(f.input/just-pressed (get % 1)) movement-buttons)) 0)
         {:keys [paths safe-path]} (get-current-dungeon-room system)]
-    (p.core/pset! group :visible (:explored-this-turn system))
+    (p.core/pset! group :visible (and (not (:visible exploration-results-sprite))
+                                      (:explored-this-turn system)))
     (doseq [[direction button] movement-buttons]
       (p.core/pset! button :visible (paths direction)))
     (if (and (f.input/blackout-expired? system :just-pressed-movement-button) direction-pressed)
