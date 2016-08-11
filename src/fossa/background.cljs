@@ -23,8 +23,7 @@
         (b.entity/add-component background (f.component/->Background)))))
 
 (defn process-one-game-tick [system _]
-  (let [background-entity (first (b.entity/get-all-entities-with-component system f.component/Background))
-        background-sprite (f.component/get-phzr-sprite-from-entity system background-entity)
+  (let [background-sprite (:phzr-sprite (f.component/get-singleton-component system f.component/Background f.component/Sprite))
         exploration-results-entity (first (b.entity/get-all-entities-with-component system f.component/ExplorationResults))
         exploration-results-sprite (f.component/get-phzr-sprite-from-entity system exploration-results-entity)]
     (if (and (f.input/blackout-expired? system :just-pressed-background)
