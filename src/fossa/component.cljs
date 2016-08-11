@@ -28,6 +28,8 @@
   (-> (b.entity/get-component system entity Group)
       :members))
 
+(defrecord MovementButtons [movement-buttons group])
+
 ; Game components
 (defrecord Background[])
 (defrecord ExplorationPath [direction active])

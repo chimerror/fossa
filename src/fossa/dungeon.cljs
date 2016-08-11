@@ -29,7 +29,9 @@
 (defn preload-assets [loader]
   (doto loader
     (p.loader/spritesheet "button" "assets/images/button.png" 190 49 2)
-    (p.loader/image "paper" "assets/images/paper.png")))
+    (p.loader/image "paper" "assets/images/paper.png")
+    (p.loader/spritesheet "square-button" "assets/images/square_button.png" 49 49 2)
+    (p.loader/spritesheet "direction-arrows" "assets/images/direction_arrows.png" 50 50 6)))
 
 (defn initialize-dungeon [system]
   (let [dungeon-entity (first (b.entity/get-all-entities-with-component system f.component/Dungeon))
@@ -113,6 +115,55 @@
       (p.core/pset! :x 145))
     (f.component/->ResultsNavigation 0 previous-text next-text)))
 
+(defn create-movement-button-icon [factory button i]
+  (let [button-icon (p.factory/sprite factory 0 0 "direction-arrows" i)]
+    (p.button/add-child button button-icon)))
+
+(declare direction-abbreviation)
+(defn create-movement-button-text [factory button i]
+  (let [direction (f.exploration-path/directions i)
+        direction-text (direction-abbreviation direction)
+        button-text (p.factory/text factory 0 0 direction-text)]
+    (p.button/add-child button button-text)
+    (doto button-text
+      (p.core/pset! :font "Cutive, Courier, MS Courier New, monospace")
+      (p.core/pset! :font-size 15)
+      (p.core/pset! :fill "#ffffff")
+      (p.core/pset! :align "center")
+      (p.core/pset! :anchor (p.point/->Point 0.5 0.5))
+      (p.core/pset! :x 25)
+      (p.core/pset! :y 25))))
+
+(def movement-buttons-coordinates
+  [[50 0]
+   [100 25]
+   [100 75]
+   [50 100]
+   [0 75]
+   [0 25]])
+
+(defn create-movement-button [button-map i factory group]
+  (let [direction (f.exploration-path/directions i)
+        tint (f.exploration-path/hex-tints i)
+        coordinates (movement-buttons-coordinates i)
+        button (p.factory/button factory 0 0 "square-button" nil nil 0 0 1 0 group)]
+    (create-movement-button-icon factory button i)
+    (create-movement-button-text factory button i)
+    (p.core/pset! button :tint tint)
+    (p.core/pset! button :x (coordinates 0))
+    (p.core/pset! button :y (coordinates 1))
+    (assoc button-map direction button)))
+
+(defn create-movement-buttons [system]
+  (let [phzr-game (:phzr-game system)
+        factory (:add phzr-game)
+        group (f.group/create-phzr-group phzr-game "movement buttons" 600 415)
+        button-map (reduce #(create-movement-button %1 %2 factory group) {} (range 6))
+        entity (b.entity/create-entity)]
+    (-> system
+        (b.entity/add-entity entity)
+        (b.entity/add-component entity (f.component/->MovementButtons button-map group)))))
+
 (defn create-entities [system]
   (let [dungeon (b.entity/create-entity)
         explore-button (b.entity/create-entity)
@@ -131,7 +182,8 @@
         (b.entity/add-component exploration-results (f.component/->Sprite exploration-results-sprite))
         (b.entity/add-component exploration-results (f.component/->Text exploration-results-text))
         (b.entity/add-component exploration-results results-navigation)
-        (b.entity/add-component exploration-results (f.component/->ExplorationResults [])))))
+        (b.entity/add-component exploration-results (f.component/->ExplorationResults []))
+        (create-movement-buttons))))
 
 (defn move-to-next-room [system]
   (let [dungeon-entity (first (b.entity/get-all-entities-with-component system f.component/Dungeon))
