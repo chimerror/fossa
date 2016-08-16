@@ -1,0 +1,5 @@
+// Compiled by ClojureScript 1.9.89 {:static-fns true, :optimize-constants true}
+goog.provide('phzr.impl.accessors.pixi.base_texture');
+goog.require('cljs.core');
+phzr.impl.accessors.pixi.base_texture.base_texture_get_properties = cljs.core.PersistentHashMap.fromArrays([cljs.core.cst$kw$image_DASH_url,cljs.core.cst$kw$has_DASH_loaded,cljs.core.cst$kw$scale_DASH_mode,cljs.core.cst$kw$width,cljs.core.cst$kw$mipmap,cljs.core.cst$kw$premultiplied_DASH_alpha,cljs.core.cst$kw$source,cljs.core.cst$kw$resolution,cljs.core.cst$kw$height],["imageUrl","hasLoaded","scaleMode","width","mipmap","premultipliedAlpha","source","resolution","height"]);
+phzr.impl.accessors.pixi.base_texture.base_texture_set_properties = new cljs.core.PersistentArrayMap(null, 6, [cljs.core.cst$kw$image_DASH_url,"imageUrl",cljs.core.cst$kw$mipmap,"mipmap",cljs.core.cst$kw$premultiplied_DASH_alpha,"premultipliedAlpha",cljs.core.cst$kw$resolution,"resolution",cljs.core.cst$kw$scale_DASH_mode,"scaleMode",cljs.core.cst$kw$source,"source"], null);
