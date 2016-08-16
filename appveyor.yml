@@ -10,14 +10,14 @@ build_script:
 - lein cljsbuild once min
 
 on_success:
-- xcopy resources\public ..\Output /e
+- xcopy resources\public ..\Output\ /e
 - git config --global credential.helper store
 - git config --global user.email "foobardog@hotmail.com"
 - git config --global user.name "Jason Mitchell"
 - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
 - git checkout gh-pages
 - git rm -rf .
-- xcopy ..\Output . /e
+- xcopy ..\Output\ . /e
 - git remote set-url origin https://github.com/foobardog/fossa.git
 - git add -A
 - git commit -a -m "Commit from AppVeyor"
