@@ -1,3 +1,4 @@
+# Clojure Files
 /resources/public/js/compiled/**
 figwheel_server.log
 pom.xml
@@ -12,5 +13,10 @@ pom.xml
 .repl
 .nrepl-port
 
+# IDEA Files
+.idea
+*.iml
+
+# VIM Files
 *~
 *.swp
