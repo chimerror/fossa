@@ -1,0 +1,24 @@
+environment:
+  access_token:
+    secure: FvID2pPi15uAutpYz2a2bwgJYFEu/7ozPCxhIfOswedUkUhulYDlzx20DttFH1b8
+
+init:
+- ps: (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein.bat', 'lein.bat')
+- lein self-install
+
+build_script:
+- lein cljsbuild once min
+
+on_success:
+- xcopy resources\public ..\Output /e
+- git config --global credential.helper store
+- git config --global user.email "foobardog@hotmail.com"
+- git config --global user.name "Jason Mitchell"
+- ps: Add-Content: "$env:USERPROFILE\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+- git checkout gh-pages
+- git rm -rf .
+- xcopy ..\Output . /e
+- git remote set-url origin https://github.com/foobardog/fossa.git
+- git add -A
+- git commit -a -m "Commit from AppVeyor"
+- git push
