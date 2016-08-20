@@ -4,10 +4,11 @@ Fossa
 Introduction
 ------------
 
-I've long wanted to make small games on the side, and I really love Clojure, so I'm making a game I've
-codenamed fossa for the [August 2016 Lisp Game Jam on itch.io](https://itch.io/jam/august-2016-lisp-game-jam). The start date is 2016-08-01, and the due date is 2016-08-11. I have a title in mind, but I like using a codename first.
+I've long wanted to make small games on the side, and I really love Clojure, so I tried to make a game I've
+codenamed fossa for the [August 2016 Lisp Game Jam on itch.io](https://itch.io/jam/august-2016-lisp-game-jam). The
+start date was 2016-08-01, and the due date was 2016-08-11. The title of the final game will be "Terrible Number Two".
 
-I'm intending to do everything, coding, design, art, and music.
+I didn't finish in time for the jam, but I am attempting to wrap it up to a playable state.
 
 Inspiration
 -----------
@@ -36,9 +37,7 @@ My Spin
 
 I've decided to change the flavor and iterate through this riddle a few times to make a longer game of
 it. Basically, this will be a type of logic game where you need to determine which members of your
-party are liars so you can escape the temple (well, cross-universe anomaly in my flavor). I may also
-expand the game by having certain party members having certain tools or abilities that are necessary to
-explore successfully (like a flashlight, or something).
+party are liars so you can escape the temple (well, research scientist maze, in my flavor).
 
 I'm writing this in [ClojureScript](https://github.com/clojure/clojurescript) using
 [phzr](https://github.com/dparis/phzr), which are ClojureScript bindings for the
@@ -48,15 +47,14 @@ an entity-component system library for dependency management purposes.
 Follow Along!
 -------------
 
-Most of my updates are at the
-[game jam community page](https://itch.io/jam/august-2016-lisp-game-jam/community) on itch.io. I'll
-also probably make a few comments on my twitters
+Most of my updates were at the
+[game jam community page](https://itch.io/jam/august-2016-lisp-game-jam/community) on itch.io.
+
+I'll may probably make a few comments on my twitters
 ([@foobardog (mundane account)](https://twitter.com/foobardog) and
 [@chimerror (furry account, may be NSFW)](https://twitter.com/chimerror)).
 
-I'm keeping track of tasks and things on [this Trello board](https://trello.com/b/vYFW4RqW). When I get
-to some interesting gameplay coding, I may do some streaming on my
-[Twitch Channel](https://www.twitch.tv/foobardog).
+I'm keeping track of tasks and things on [this Trello board](https://trello.com/b/vYFW4RqW).
 
 License and Legal Information
 -----------------------------
@@ -64,17 +62,42 @@ License and Legal Information
 Copyright © 2016 Jason Mitchell.
 Distributed under [The MIT License](https://opensource.org/licenses/MIT).
 
+### Libraries
+
 [brute](https://github.com/markmandel/brute) by [Mark Mandel](https://github.com/markmandel) is licensed
 under [The Eclipse Public License, version 1.0](https://eclipse.org/org/documents/epl-v10.html).
 
 [phzr](https://github.com/dparis/phzr) by [Dylan Paris](https://github.com/dparis) is licensed under
 [The MIT License](https://opensource.org/licenses/MIT).
 
-[Web Font Loader](https://github.com/typekit/webfontloader) by [Google](https://www.google.com/) and
-[Typekit](https://typekit.com/) is licensed under
+[Web Font Loader](https://github.com/typekit/webfontloader) by [Google](https://www.google.com) and
+[Typekit](https://typekit.com) is licensed under
 [The Apache License, version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
+
+### Fonts
+
+[Cutive Roman](https://github.com/vernnobile/CutiveFont) by [Vernon Adams](https://github.com/vernnobile) is licensed
+under [SIL Open Font License](http://scripts.sil.org/OFL).
+
+[Just Me Again Down Here](http://www.kimberlygeswein.com/2010/10/11/updated-just-me-again-down-here/) by
+[Kimberly Geswein](http://www.kimberlygeswein.com) is licensed under
+[SIL Open Font License](http://scripts.sil.org/OFL).
+
+### Graphics
+
+Buttons and Direction Arrows from [Kenney Game Assets](https://kenney.itch.io/kenney-donation) by
+[Kenney](http://www.kenney.nl) is licensed under
+[CC0 (Public Domain)](http://creativecommons.org/publicdomain/zero/1.0)
 
 ["Artificial hive icon"](http://game-icons.net/lorc/originals/artificial-hive.html),
 ["Seated mouse icon"](http://game-icons.net/lorc/originals/seated-mouse.html),
 ["Mouse icon"](http://game-icons.net/lorc/originals/mouse.html) by [Lorc](http://lorcblog.blogspot.com)
-is licensed under ["CC BY 3.0"](https://creativecommons.org/licenses/by/3.0) as placeholder art.
+is licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0).
+
+Some edits made to "Seated mouse icon" by Jason Mitchell.
+
+["'Green Bar' Computer Paper"](https://www.flickr.com/photos/dmswart/6507071701) by
+[David Swart](https://www.flickr.com/photos/dmswart) is licensed under
+[CC BY 2.0](https://creativecommons.org/licenses/by/2.0).
+
+Some edits made to "'Green Bar' Computer Paper" by Jason Mitchell.

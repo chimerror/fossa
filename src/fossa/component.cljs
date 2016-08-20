@@ -30,6 +30,8 @@
 
 (defrecord ResultsNavigation [current-result previous-text next-text])
 
+(defrecord DialogueBox [group background-sprite textbox-sprite textbox-text character-sprite])
+
 ; Hybrid components
 (defrecord Group [phzr-group members])
 (defn get-phzr-group-from-entity [system entity]
