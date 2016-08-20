@@ -10,13 +10,13 @@
                  [org.clojure/clojurescript "1.9.89"]
                  [org.clojure/core.async "0.2.385"
                   :exclusions [org.clojure/tools.reader]]
+                 [figwheel-sidecar "0.5.4-7"]
                  [brute "0.4.0"]
                  [phzr "0.1.0-SNAPSHOT"]]
 
-  :plugins [[lein-figwheel "0.5.4-7"]
-            [lein-cljsbuild "1.1.3" :exclusions [[org.clojure/clojure]]]]
+  :plugins [[lein-cljsbuild "1.1.3" :exclusions [[org.clojure/clojure]]]]
 
-  :source-paths ["src"]
+  :source-paths ["src", "script"]
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
 

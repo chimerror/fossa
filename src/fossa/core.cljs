@@ -5,6 +5,7 @@
             [phzr.game :as p.game]
             [WebFont :as wf]
             [fossa.background :as f.background]
+            [fossa.dialogue :as f.dialogue]
             [fossa.dungeon :as f.dungeon]
             [fossa.exploration-path :as f.exploration-path]
             [fossa.group :as f.group]
@@ -20,7 +21,8 @@
         (f.background/preload-assets)
         (f.exploration-path/preload-assets)
         (f.party-member/preload-assets)
-        (f.dungeon/preload-assets)))
+        (f.dungeon/preload-assets)
+        (f.dialogue/preload-assets)))
 
 (defn create-game! [_]
     (-> @*system*
@@ -30,6 +32,7 @@
         (f.exploration-path/create-entities)
         (f.party-member/create-entities)
         (f.dungeon/create-entities)
+        (f.dialogue/create-entities)
         (as-> s (reset! *system* s))))
 
 (defn update-game! [game]
@@ -59,6 +62,7 @@
       (b.system/add-system-fn f.party-member/process-one-game-tick)
       (b.system/add-system-fn f.group/process-one-game-tick)
       (b.system/add-system-fn f.dungeon/process-one-game-tick)
+      (b.system/add-system-fn f.dialogue/process-one-game-tick)
       (as-> s (reset! *system* s))))
 
 (wf/load
