@@ -1,0 +1,6 @@
+// Compiled by ClojureScript 1.9.89 {:static-fns true, :optimize-constants true}
+goog.provide('phzr.impl.accessors.cache');
+goog.require('cljs.core');
+phzr.impl.accessors.cache.cache_constants = cljs.core.PersistentHashMap.fromArrays([cljs.core.cst$kw$binary,cljs.core.cst$kw$sound,cljs.core.cst$kw$video,cljs.core.cst$kw$render_DASH_texture,cljs.core.cst$kw$bitmapdata,cljs.core.cst$kw$canvas,cljs.core.cst$kw$physics,cljs.core.cst$kw$tilemap,cljs.core.cst$kw$bitmapfont,cljs.core.cst$kw$image,cljs.core.cst$kw$json,cljs.core.cst$kw$xml,cljs.core.cst$kw$texture,cljs.core.cst$kw$shader,cljs.core.cst$kw$text],["BINARY","SOUND","VIDEO","RENDER_TEXTURE","BITMAPDATA","CANVAS","PHYSICS","TILEMAP","BITMAPFONT","IMAGE","JSON","XML","TEXTURE","SHADER","TEXT"]);
+phzr.impl.accessors.cache.cache_get_properties = new cljs.core.PersistentArrayMap(null, 3, [cljs.core.cst$kw$auto_DASH_resolve_DASH_url,"autoResolveURL",cljs.core.cst$kw$game,"game",cljs.core.cst$kw$on_DASH_sound_DASH_unlock,"onSoundUnlock"], null);
+phzr.impl.accessors.cache.cache_set_properties = new cljs.core.PersistentArrayMap(null, 3, [cljs.core.cst$kw$auto_DASH_resolve_DASH_url,"autoResolveURL",cljs.core.cst$kw$game,"game",cljs.core.cst$kw$on_DASH_sound_DASH_unlock,"onSoundUnlock"], null);
