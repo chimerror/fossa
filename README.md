@@ -8,7 +8,8 @@ I've long wanted to make small games on the side, and I really love Clojure, so 
 codenamed fossa for the [August 2016 Lisp Game Jam on itch.io](https://itch.io/jam/august-2016-lisp-game-jam). The
 start date was 2016-08-01, and the due date was 2016-08-11. The title of the final game will be "Terrible Number Two".
 
-I didn't finish in time for the jam, but I am attempting to wrap it up to a playable state.
+I didn't finish in time for the jam, but I am attempting to wrap it up to a playable state. You can check out progress
+on [this repo's GitHub Pages site](https://foobardog.github.io/fossa/).
 
 Inspiration
 -----------
