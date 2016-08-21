@@ -20,8 +20,10 @@
 (defn just-pressed [phzr-sprite]
   (-> phzr-sprite :input (p.input-handler/just-pressed nil default-input-threshold))) ; Use main pointer
 
-(defn update-blackout-property [system blackout-key]
-  (assoc system blackout-key (-> system :phzr-game :time :events :ms)))
+(defn update-blackout-property
+  ([system blackout-key] (update-blackout-property system blackout-key 0))
+  ([system blackout-key delay]
+  (assoc system blackout-key (+ delay (-> system :phzr-game :time :events :ms)))))
 
 (defn blackout-expired? [system blackout-key]
   (let [current-time (-> system :phzr-game :time :events :ms)

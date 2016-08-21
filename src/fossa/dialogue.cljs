@@ -22,8 +22,15 @@
    '({:frame 0 :text "Hello, The scientists refer to me as Subject #2..."}
      {:frame 2 :text "But I prefer to be called Mary-Ann!"}
      {:frame 1 :text "My fellow subjects and I have been put in an odd maze of the scientists’ design..."}
-     {:frame 0 :text "...And it’s up to me to lead them all out!"})})
+     {:frame 0 :text "...And it’s up to me to lead them all out!"})
+   :wrong-path
+   '({:frame 1 :text "Oh, dear, that was the wrong path..."}
+     {:frame 0 :text "Now, let's focus on the next room!"})
+   :right-path
+   '({:frame 2 :text "Yes! This seems to be the right way!"}
+     {:frame 0 :text "But, I'd better stay focused..."})})
 
+(declare start-dialogue)
 (defn create-entities [system]
   (let [phzr-game (:phzr-game system)
         factory (:add phzr-game)
@@ -49,9 +56,9 @@
       (p.core/pset! :y 15))
     (p.core/pset! group :visible false)
     (-> system
-        (assoc :active-dialogue (:introduction dialogues))
         (b.entity/add-entity dialogue-box-entity)
-        (b.entity/add-component dialogue-box-entity (f.component/->DialogueBox group background-sprite textbox-sprite textbox-text character-sprite)))))
+        (b.entity/add-component dialogue-box-entity (f.component/->DialogueBox group background-sprite textbox-sprite textbox-text character-sprite))
+        (start-dialogue :introduction))))
 
 (defn advance-dialogue [system]
   (let [{:keys [active-dialogue] :as sys} system
@@ -67,6 +74,11 @@
         (p.core/pset! textbox-text :text text)
         (p.core/pset! group :visible true)
         (assoc sys :active-dialogue next-dialogues)))))
+
+(defn start-dialogue [system dialogue-key]
+  (-> system
+      (assoc :active-dialogue (get dialogues dialogue-key))
+      (advance-dialogue)))
 
 (defn process-one-game-tick [system]
   (let [input-handler (-> system :phzr-game :input)

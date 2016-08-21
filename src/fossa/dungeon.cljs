@@ -9,6 +9,7 @@
             [phzr.signal :as p.signal]
             [phzr.sprite :as p.sprite]
             [fossa.component :as f.component]
+            [fossa.dialogue :as f.dialogue]
             [fossa.exploration-path :as f.exploration-path]
             [fossa.group :as f.group]
             [fossa.input :as f.input]
@@ -212,7 +213,7 @@
   (-> (b.entity/get-all-entities-with-component system f.component/ExploreButton)
       (first)))
 
-(def liar-truth-percentage .25)
+(def liar-truth-percentage 0.25)
 (defn get-answer [party-member is-it-safe?]
   (cond
     (not (:is-liar party-member)) is-it-safe?
@@ -331,7 +332,7 @@
         exploration-result-count (count (:previous-results (f.component/get-singleton-component system f.component/ExplorationResults)))
         exploration-results-sprite (:phzr-sprite (f.component/get-singleton-component system f.component/ExplorationResults f.component/Sprite))
         results-navigation-entity (first (b.entity/get-all-entities-with-component system f.component/ResultsNavigation))
-        {:keys [current-result] :as results-navigation} (b.entity/get-component system results-navigation-entity f.component/ResultsNavigation)]
+        results-navigation (b.entity/get-component system results-navigation-entity f.component/ResultsNavigation)]
     (p.core/pset! phzr-button :visible (and (not (:visible exploration-results-sprite))
                                             (> exploration-result-count 0)))
     (if (and (f.input/blackout-expired? system :just-pressed-results-button)
@@ -348,7 +349,7 @@
 (defn move-to-next-room [system direction]
   (let [dungeon (f.component/get-singleton-component system f.component/Dungeon)
         dungeon-entity (f.component/get-singleton-entity system f.component/Dungeon)
-        {:keys [paths safe-path]} (get-current-dungeon-room system)
+        {:keys [safe-path]} (get-current-dungeon-room system)
         movement-results-entity (f.component/get-singleton-entity system f.component/MovementResults)
         movement-results (:previous-results (f.component/get-singleton-component system f.component/MovementResults))
         current-exploration (dec (count (:previous-results (f.component/get-singleton-component system f.component/ExplorationResults))))
@@ -360,14 +361,15 @@
         (assoc :explored-this-turn false)
         (b.entity/add-component dungeon-entity
                                 (f.component/->Dungeon (:rooms dungeon) (inc (:current-room dungeon))))
-        (initialize-dungeon))))
+        (initialize-dungeon)
+        (f.input/update-blackout-property :clicked-dialogue f.input/default-input-threshold) ; HACK: To avoid skipping the first dialogue
+        (f.dialogue/start-dialogue (if move-is-safe? :right-path :wrong-path)))))
 
 (defn handle-movement-buttons [system]
-  (let [phzr-game (:phzr-game system)
-        exploration-results-sprite (:phzr-sprite (f.component/get-singleton-component system f.component/ExplorationResults f.component/Sprite))
+  (let [exploration-results-sprite (:phzr-sprite (f.component/get-singleton-component system f.component/ExplorationResults f.component/Sprite))
         {:keys [movement-buttons group]} (f.component/get-singleton-component system f.component/MovementButtons)
         direction-pressed (get (first (filter #(f.input/just-pressed (get % 1)) movement-buttons)) 0)
-        {:keys [paths safe-path]} (get-current-dungeon-room system)]
+        {:keys [paths]} (get-current-dungeon-room system)]
     (p.core/pset! group :visible (and (not (:visible exploration-results-sprite))
                                       (:explored-this-turn system)))
     (doseq [[direction button] movement-buttons]
