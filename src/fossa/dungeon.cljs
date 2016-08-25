@@ -48,6 +48,7 @@
         factory (:add phzr-game)
         phzr-button (p.factory/button factory 0 0 "button" nil nil 0 0 1 0)
         phzr-text (p.factory/text factory 0 0 "Explore")]
+    (f.input/set-event-callback! phzr-button :on-input-up :pressed-explore-button)
     (p.button/add-child phzr-button phzr-text)
     (doto phzr-text
       (p.core/pset! :font "Cutive, Courier, MS Courier New, monospace")
@@ -98,20 +99,22 @@
         previous-text (p.factory/text factory 0 0 "<Previous")
         next-text (p.factory/text factory 0 0 "Next>")]
     (doseq [text [previous-text next-text]]
-    (p.sprite/add-child sprite text)
-    (doto text
-      (p.core/pset! :font "Just Me Again Down Here, MV Boli, Apple Chancery, Zapfino, cursive")
-      (p.core/pset! :font-size 60)
-      (p.core/pset! :fill "#0000ff")
-      (-> :events :on-input-over (p.signal/add (fn [sprite _] (p.core/pset! sprite :fill "#ff0000"))))
-      (-> :events :on-input-out (p.signal/add (fn [sprite _] (p.core/pset! sprite :fill "#0000ff"))))
-      (p.core/pset! :input-enabled true)
-      (-> :input (p.core/pset! :priority-id 1))
-      (p.core/pset! :y -525)))
+      (p.sprite/add-child sprite text)
+      (doto text
+        (p.core/pset! :font "Just Me Again Down Here, MV Boli, Apple Chancery, Zapfino, cursive")
+        (p.core/pset! :font-size 60)
+        (p.core/pset! :fill "#0000ff")
+        (-> :events :on-input-over (p.signal/add (fn [sprite _] (p.core/pset! sprite :fill "#ff0000"))))
+        (-> :events :on-input-out (p.signal/add (fn [sprite _] (p.core/pset! sprite :fill "#0000ff"))))
+        (p.core/pset! :input-enabled true)
+        (-> :input (p.core/pset! :priority-id 1))
+        (p.core/pset! :y -525)))
     (doto previous-text
+      (f.input/set-event-callback! :on-input-up :pressed-previous-results)
       (p.core/pset! :align "left")
       (p.core/pset! :x -270))
     (doto next-text
+      (f.input/set-event-callback! :on-input-up :pressed-next-results)
       (p.core/pset! :align "right")
       (p.core/pset! :x 145))
     (f.component/->ResultsNavigation 0 previous-text next-text)))
@@ -121,6 +124,7 @@
         factory (:add phzr-game)
         phzr-button (p.factory/button factory 0 526 "button" nil nil 0 0 1 0)
         phzr-text (p.factory/text factory 0 0 "Results")]
+    (f.input/set-event-callback! phzr-button :on-input-up :pressed-results-button)
     (p.button/add-child phzr-button phzr-text)
     (doto phzr-text
       (p.core/pset! :font "Cutive, Courier, MS Courier New, monospace")
@@ -209,10 +213,6 @@
         (b.entity/add-component results-button-entity (f.component/->ResultsButton results-button))
         (create-movement-buttons))))
 
-(defn get-explore-button-entity [system]
-  (-> (b.entity/get-all-entities-with-component system f.component/ExploreButton)
-      (first)))
-
 (def liar-truth-percentage 0.25)
 (defn get-answer [party-member is-it-safe?]
   (cond
@@ -293,57 +293,56 @@
         (update-results-navigation))))
 
 (defn handle-explore-button [system]
-  (let [explore-button-entity (get-explore-button-entity system)
-        explore-button (b.entity/get-component system explore-button-entity f.component/ExploreButton)
-        unassigned-group (f.group/get-unassigned-members-entity system)
-        unassigned-members (f.component/get-group-members-from-entity system unassigned-group)
-        exploration-results-entity (first (b.entity/get-all-entities-with-component system f.component/ExplorationResults))
-        exploration-results-sprite (f.component/get-phzr-sprite-from-entity system exploration-results-entity)]
-    (p.core/pset! (:phzr-button explore-button) :visible (and (empty? unassigned-members)
-                                                              (not (:visible exploration-results-sprite))))
-    (if (and (f.input/blackout-expired? system :just-pressed-blackout)
-             (f.input/just-pressed (:phzr-button explore-button)))
+  (let [explore-button (:phzr-button (f.component/get-singleton-component system f.component/ExploreButton))
+        unassigned-members (:members (f.component/get-singleton-component system f.component/UnassignedMembers f.component/Group))
+        exploration-results-sprite (:phzr-sprite (f.component/get-singleton-component system f.component/ExplorationResults f.component/Sprite))]
+    (p.core/pset! explore-button :visible (and (empty? unassigned-members)
+                                               (not (:visible exploration-results-sprite))))
+    (if (f.input/event-happened-in-system? system :pressed-explore-button)
       (-> system
-          (f.input/update-blackout-property :just-pressed-blackout)
+          (f.input/consume-event-from-system :pressed-explore-button)
           (do-exploration))
       system)))
 
 (defn handle-results-navigation [system]
-  (let [results-navigation-entity (first (b.entity/get-all-entities-with-component system f.component/ResultsNavigation))
-        {:keys [current-result previous-text next-text]} (b.entity/get-component system results-navigation-entity f.component/ResultsNavigation)
-        previous-pressed (f.input/just-pressed previous-text)
-        next-pressed (f.input/just-pressed next-text)
-        exploration-results-entity (first (b.entity/get-all-entities-with-component system f.component/ExplorationResults))
-        exploration-results-count (count (:previous-results (b.entity/get-component system exploration-results-entity f.component/ExplorationResults)))]
-    (if (and (f.input/blackout-expired? system :just-pressed-results-nav)
-             (or previous-pressed next-pressed))
-      (let [updated-result (if previous-pressed
+  (let [results-navigation-entity (f.component/get-singleton-entity system f.component/ResultsNavigation)
+        {:keys [current-result] :as result-navigation-component} (f.component/get-singleton-component system f.component/ResultsNavigation)
+        previous-pressed? (f.input/event-happened-in-system? system :pressed-previous-results)
+        next-pressed? (f.input/event-happened-in-system? system :pressed-next-results)
+        exploration-results-count (-> (f.component/get-singleton-component system f.component/ExplorationResults)
+                                      :previous-results
+                                      count)]
+    (if (or previous-pressed? next-pressed?)
+      (let [updated-result (if previous-pressed?
                              (max (dec current-result) 0)
                              (min (inc current-result) (dec exploration-results-count)))]
-      (-> system
-          (f.input/update-blackout-property :just-pressed-results-nav)
-          (b.entity/add-component results-navigation-entity
-                                  (f.component/->ResultsNavigation updated-result previous-text next-text))
-          (update-results-navigation)))
+        (-> system
+            (as-> sys (if previous-pressed?
+                        (f.input/consume-event-from-system sys :pressed-previous-results)
+                        (f.input/consume-event-from-system sys :pressed-next-results)))
+            (b.entity/add-component results-navigation-entity
+                                    (assoc result-navigation-component :current-result updated-result))
+            (update-results-navigation)))
       system)))
 
 (defn handle-results-button [system]
   (let [{:keys [phzr-button]} (f.component/get-singleton-component system f.component/ResultsButton)
-        exploration-result-count (count (:previous-results (f.component/get-singleton-component system f.component/ExplorationResults)))
+        exploration-results-count (-> (f.component/get-singleton-component system f.component/ExplorationResults)
+                                      :previous-results
+                                      count)
         exploration-results-sprite (:phzr-sprite (f.component/get-singleton-component system f.component/ExplorationResults f.component/Sprite))
-        results-navigation-entity (first (b.entity/get-all-entities-with-component system f.component/ResultsNavigation))
-        results-navigation (b.entity/get-component system results-navigation-entity f.component/ResultsNavigation)]
+        results-navigation-entity (f.component/get-singleton-entity system f.component/ResultsNavigation)
+        results-navigation-component (f.component/get-singleton-component system f.component/ResultsNavigation)]
     (p.core/pset! phzr-button :visible (and (not (:visible exploration-results-sprite))
-                                            (> exploration-result-count 0)))
-    (if (and (f.input/blackout-expired? system :just-pressed-results-button)
-             (f.input/just-pressed phzr-button))
+                                            (> exploration-results-count 0)))
+    (if (f.input/event-happened-in-system? system :pressed-results-button)
       (-> system
-          (f.input/update-blackout-property :just-pressed-results-button)
-          (as-> sys (do (p.core/pset! exploration-results-sprite :visible true) sys))
+          (f.input/consume-event-from-system :pressed-results-button)
           (b.entity/add-component results-navigation-entity
-                                  (assoc results-navigation
-                                         :current-result (dec exploration-result-count)))
-          (update-results-navigation))
+                                  (assoc results-navigation-component
+                                         :current-result (dec exploration-results-count)))
+          (update-results-navigation)
+          (as-> sys (do (p.core/pset! exploration-results-sprite :visible true) sys)))
           system)))
 
 (defn move-to-next-room [system direction]
@@ -362,7 +361,6 @@
         (b.entity/add-component dungeon-entity
                                 (f.component/->Dungeon (:rooms dungeon) (inc (:current-room dungeon))))
         (initialize-dungeon)
-        (f.input/update-blackout-property :clicked-dialogue f.input/default-input-threshold) ; HACK: To avoid skipping the first dialogue
         (f.dialogue/start-dialogue (if move-is-safe? :right-path :wrong-path)))))
 
 (defn handle-movement-buttons [system]

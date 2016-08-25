@@ -3,7 +3,6 @@
             [phzr.core :as p.core]
             [phzr.game-object-factory :as p.factory]
             [phzr.loader :as p.loader]
-            [phzr.pointer :as p.pointer]
             [phzr.sprite :as p.sprite]
             [fossa.component :as f.component]
             [fossa.group :as f.group]
@@ -41,8 +40,9 @@
         textbox-sprite (p.factory/sprite factory 9 400 "panel" 0 group)
         textbox-text (p.factory/text factory 0 0 textbox-test-text)]
     (doto background-sprite
-      (p.core/pset! :input-enabled true) ; So it blocks other input
+      (p.core/pset! :input-enabled true)
       (-> :input (p.core/pset! :priority-id 2))
+      (f.input/set-event-callback! :on-input-up :pressed-dialogue)
       (p.core/pset! :tint 16rffffff)
       (p.core/pset! :alpha 0.95))
     (p.sprite/add-child textbox-sprite textbox-text)
@@ -81,12 +81,7 @@
       (advance-dialogue)))
 
 (defn process-one-game-tick [system]
-  (let [input-handler (-> system :phzr-game :input)
-        active-pointer (:active-pointer input-handler)]
-    (if (and (:active-dialogue system)
-             (f.input/blackout-expired? system :clicked-dialogue)
-             active-pointer
-             (p.pointer/just-released active-pointer f.input/default-input-threshold))
-      (-> system (f.input/update-blackout-property :clicked-dialogue) (advance-dialogue))
-      system)))
+  (if (f.input/event-happened-in-system? system :pressed-dialogue)
+    (-> system (f.input/consume-event-from-system :pressed-dialogue) (advance-dialogue))
+    system))
 

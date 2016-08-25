@@ -13,7 +13,7 @@
 (defn create-background-sprite [phzr-game]
   (doto (f.rendering/create-phzr-sprite phzr-game "background" "background" 0 0)
     (p.core/pset! :input-enabled true)
-    (f.input/set-event-callback! :on-input-up :just-pressed-background)))
+    (f.input/set-event-callback! :on-input-up :pressed-background)))
 
 (defn create-entities [system]
   (let [phzr-game (:phzr-game system)
@@ -25,9 +25,9 @@
 
 (defn process-one-game-tick [system _]
   (let [{:keys [phzr-sprite]} (f.component/get-singleton-component system f.component/ExplorationResults f.component/Sprite)
-        event-happened? (f.input/event-happened-in-system? system :just-pressed-background)]
+        event-happened? (f.input/event-happened-in-system? system :pressed-background)]
       (if event-happened?
         (do
           (p.core/pset! phzr-sprite :visible false)
-          (f.input/consume-event-from-system system :just-pressed-background))
+          (f.input/consume-event-from-system system :pressed-background))
       system)))
