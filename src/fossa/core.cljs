@@ -9,6 +9,7 @@
             [fossa.dungeon :as f.dungeon]
             [fossa.exploration-path :as f.exploration-path]
             [fossa.group :as f.group]
+            [fossa.input :as f.input]
             [fossa.party-member :as f.party-member]
             [fossa.rendering :as f.rendering]))
 
@@ -26,6 +27,7 @@
 
 (defn create-game! [_]
     (-> @*system*
+        (assoc :events {})
         (doto (-> :phzr-game :input (p.core/pset! :max-pointers 1)))
         (f.background/create-entities)
         (f.group/create-entities)
@@ -37,8 +39,10 @@
 
 (defn update-game! [game]
   (let [system @*system*
+        events (:events system)
         delta (-> game :time :physics-elapsed-ms)]
     (-> system
+        (assoc :events (f.input/get-events! events))
         (b.system/process-one-game-tick delta)
         (as-> s (reset! *system* s)))))
 
@@ -55,6 +59,7 @@
 (defn initialize-game! []
   (when-let [curr-game (:phzr-game @*system*)]
     (p.game/destroy curr-game))
+  (f.input/clear-events!)
   (-> (b.entity/create-system)
       (assoc :phzr-game (get-new-phzr-game-object))
       (b.system/add-system-fn f.background/process-one-game-tick)

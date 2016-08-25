@@ -3,6 +3,45 @@
             [phzr.input-handler :as p.input-handler]
             [phzr.signal :as p.signal]))
 
+(defonce *events* (atom {}))
+
+(defn clear-events! []
+  (reset! *events* {}))
+
+(defn register-event [events event-key]
+  {:post [(number? (get % event-key)), (> (get % event-key) 0)]}
+  (update events event-key #(if (nil? %) 1 (inc %))))
+
+(defn register-event! [event-key]
+  (swap! *events* register-event event-key))
+
+(defn set-event-callback! [phzr-sprite phzr-event-key fossa-event-key]
+  (p.signal/add (-> phzr-sprite :events phzr-event-key) (fn [] (register-event! fossa-event-key))))
+
+(defn get-and-set! [atm new-value]
+  (loop [old-value @atm]
+    (if (compare-and-set! atm old-value new-value)
+      old-value
+      (recur @atm))))
+
+(defn get-events! [unhandled-events]
+  (let [pending-events (get-and-set! *events* {})]
+    (merge-with + unhandled-events pending-events)))
+
+(defn event-happened? [events event-key]
+  (let [event-count (get events event-key)]
+    (and event-count (> event-count 0))))
+
+(defn event-happened-in-system? [system event-key]
+  (event-happened? (:events system) event-key))
+
+(defn consume-event [events event-key]
+  {:pre [(number? (get events event-key)), (> (get events event-key) 0)]}
+  (update events event-key dec))
+
+(defn consume-event-from-system [system event-key]
+  (update system :events #(consume-event % event-key)))
+
 (defn set-drag-enabled [input-handler enable]
   (if enable
     (p.input-handler/enable-drag input-handler false true) ; Drag from click-point, bring sprite to top
