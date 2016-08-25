@@ -93,6 +93,24 @@
       (p.core/pset! :x -270)
       (p.core/pset! :y -460))))
 
+(def movement-results-original-text "We moved SW. It was UNSAFE!!!")
+
+(defn create-movement-results-text [system sprite]
+  (let [phzr-game (:phzr-game system)
+        factory (:add phzr-game)
+        phzr-text (p.factory/text factory 0 0 movement-results-original-text)]
+    (p.sprite/add-child sprite phzr-text)
+    (doto phzr-text
+      (p.core/pset! :visible false)
+      (p.core/pset! :font "Just Me Again Down Here, MV Boli, Apple Chancery, Zapfino, cursive")
+      (p.core/pset! :font-size 40)
+      (p.core/pset! :fill "#ff0000")
+      (p.core/pset! :align "center")
+      (p.core/pset! :word-wrap true)
+      (p.core/pset! :word-wrap-width (- (:width sprite) 150))
+      (p.core/pset! :x -210)
+      (p.core/pset! :y -160))))
+
 (defn create-exploration-results-navigation [system sprite]
   (let [phzr-game (:phzr-game system)
         factory (:add phzr-game)
@@ -193,6 +211,7 @@
         exploration-results-sprite (create-exploration-results-sprite system)
         exploration-results-text (create-exploration-results-text system exploration-results-sprite)
         movement-results (b.entity/create-entity)
+        movement-results-text (create-movement-results-text system exploration-results-sprite)
         results-navigation (create-exploration-results-navigation system exploration-results-sprite)
         results-button-entity (b.entity/create-entity)
         results-button (create-results-button system)]
@@ -208,7 +227,7 @@
         (b.entity/add-component exploration-results results-navigation)
         (b.entity/add-component exploration-results (f.component/->ExplorationResults []))
         (b.entity/add-entity movement-results)
-        (b.entity/add-component movement-results (f.component/->MovementResults {}))
+        (b.entity/add-component movement-results (f.component/->MovementResults {} movement-results-text))
         (b.entity/add-entity results-button-entity)
         (b.entity/add-component results-button-entity (f.component/->ResultsButton results-button))
         (create-movement-buttons))))
@@ -255,17 +274,34 @@
   (let [lines (map get-direction-result results-map)]
     (apply str lines)))
 
+(defn update-movement-text [system]
+  (let [{:keys [current-result]} (f.component/get-singleton-component system f.component/ResultsNavigation)
+        {:keys [previous-results movement-results-text]} (f.component/get-singleton-component system f.component/MovementResults)]
+    (if-let [{:keys [direction was-safe?]} (get previous-results current-result)]
+      (doto movement-results-text
+        (p.core/pset! :fill (if was-safe? "#009900" "#ff0000"))
+        (p.core/pset!
+          :text
+          (c.pprint/cl-format
+            nil
+            "- We moved ~A. It was ~:[UNSAFE!!!~;safe.~] -"
+            (get direction-abbreviation direction)
+            was-safe?))
+        (p.core/pset! :visible true))
+      (p.core/pset! movement-results-text :visible false))
+    system))
+
 (defn update-results-navigation [system]
   (let [results-navigation (first (b.entity/get-all-entities-with-component system f.component/ResultsNavigation))
         {:keys [current-result previous-text next-text]} (b.entity/get-component system results-navigation f.component/ResultsNavigation)
         exploration-results-entity (first (b.entity/get-all-entities-with-component system f.component/ExplorationResults))
         exploration-results (:previous-results (b.entity/get-component system exploration-results-entity f.component/ExplorationResults))
         exploration-results-text (f.component/get-phzr-text-from-entity system exploration-results-entity)
-        new-text (get-exploration-text (get exploration-results current-result))]
+        new-exploration-text (get-exploration-text (get exploration-results current-result))]
     (p.core/pset! previous-text :visible (not= current-result 0))
     (p.core/pset! next-text :visible (not= current-result (dec (count exploration-results))))
-    (p.core/pset! exploration-results-text :text new-text)
-    system))
+    (p.core/pset! exploration-results-text :text new-exploration-text)
+    (update-movement-text system)))
 
 (defn get-current-dungeon-room [system]
   (let [{:keys [rooms current-room]} (f.component/get-singleton-component system f.component/Dungeon)]
@@ -350,13 +386,14 @@
         dungeon-entity (f.component/get-singleton-entity system f.component/Dungeon)
         {:keys [safe-path]} (get-current-dungeon-room system)
         movement-results-entity (f.component/get-singleton-entity system f.component/MovementResults)
-        movement-results (:previous-results (f.component/get-singleton-component system f.component/MovementResults))
+        movement-results-component (f.component/get-singleton-component system f.component/MovementResults)
+        previous-results (:previous-results movement-results-component)
         current-exploration (dec (count (:previous-results (f.component/get-singleton-component system f.component/ExplorationResults))))
         move-is-safe? (= direction safe-path)
-        new-results (assoc movement-results current-exploration {:direction direction :was-safe? move-is-safe?})]
+        new-previous-results (assoc previous-results current-exploration {:direction direction :was-safe? move-is-safe?})]
     (-> system
         (b.entity/add-component movement-results-entity
-                                (f.component/->MovementResults new-results))
+                                (assoc movement-results-component :previous-results new-previous-results))
         (assoc :explored-this-turn false)
         (b.entity/add-component dungeon-entity
                                 (f.component/->Dungeon (:rooms dungeon) (inc (:current-room dungeon))))

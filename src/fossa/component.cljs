@@ -56,5 +56,5 @@
 (defrecord Dungeon [rooms current-room])
 (defrecord ExploreButton [phzr-button])
 (defrecord ExplorationResults [previous-results])
-(defrecord MovementResults [previous-results])
+(defrecord MovementResults [previous-results movement-results-text])
 (defrecord ResultsButton [phzr-button])
