@@ -8,6 +8,7 @@
             [phzr.point :as p.point]
             [phzr.signal :as p.signal]
             [phzr.sprite :as p.sprite]
+            [phzr.world :as p.world]
             [fossa.component :as f.component]
             [fossa.dialogue :as f.dialogue]
             [fossa.exploration-path :as f.exploration-path]
@@ -17,7 +18,7 @@
             [fossa.rendering :as f.rendering]))
 
 (def initial-dungeon
-  [{:paths #{ :north :south :southwest :southeast }
+  [{:paths #{ :north :south :southwest :northeast }
     :safe-path :southwest
     :liars 2}
    {:paths #{ :north :northeast :southeast }
@@ -32,7 +33,21 @@
     (p.loader/spritesheet "button" "assets/images/button.png" 190 49 2)
     (p.loader/image "paper" "assets/images/paper.png")
     (p.loader/spritesheet "square-button" "assets/images/square_button.png" 49 49 2)
-    (p.loader/spritesheet "direction-arrows" "assets/images/direction_arrows.png" 50 50 6)))
+    (p.loader/spritesheet "direction-arrows" "assets/images/direction_arrows.png" 50 50 6)
+    (p.loader/image "dungeon-status" "assets/images/panel.png")))
+
+(defn update-dungeon-status [system]
+  (let [{:keys [text]} (f.component/get-singleton-component system f.component/DungeonStatus)
+        {:keys [rooms current-room]} (f.component/get-singleton-component system f.component/Dungeon)
+        rooms-left (- (count rooms) current-room)
+        liar-count (f.party-member/get-liar-count system)]
+      (p.core/pset! text :text
+                    (c.pprint/cl-format
+                      nil
+                      "Subject #2 Rank:~%TERRIBLE~%Room(s) left: ~D~%Exp. Subjects: ~D"
+                      rooms-left
+                      liar-count))
+      system))
 
 (defn initialize-dungeon [system]
   (let [dungeon-entity (first (b.entity/get-all-entities-with-component system f.component/Dungeon))
@@ -41,7 +56,8 @@
     (-> system
         (f.exploration-path/update-exploration-paths (:paths current-room))
         (f.group/move-all-members-back-to-unassigned)
-        (f.party-member/set-liars (:liars current-room)))))
+        (f.party-member/set-liars (:liars current-room))
+        (update-dungeon-status))))
 
 (defn create-explore-button [system]
   (let [phzr-game (:phzr-game system)
@@ -203,6 +219,33 @@
         (b.entity/add-entity entity)
         (b.entity/add-component entity (f.component/->MovementButtons button-map group)))))
 
+(def dungeon-status-original-text "Subject #2 Rank:\nTERRIBLE\nRoom(s) left: 10\nExp. Subjects: 10")
+
+(defn create-dungeon-status [system]
+  (let [phzr-game (:phzr-game system)
+        factory (:add phzr-game)
+        sprite (f.rendering/create-phzr-sprite phzr-game "dungeon-status" "dungeon-status" 890 80)
+        text (p.factory/text factory 0 0 dungeon-status-original-text)
+        dungeon-status (b.entity/create-entity)]
+    (doto sprite
+      (p.core/pset! :anchor (p.point/->Point 0.5 0.5))
+      (p.core/pset! :visible true)
+      (p.core/pset! :z 16r30)
+      (p.sprite/add-child text))
+    (doto text
+      (p.core/pset! :font "Cutive, Courier, MS Courier New, monospace")
+      (p.core/pset! :font-size 20)
+      (p.core/pset! :fill "#000000")
+      (p.core/pset! :align "left")
+      (p.core/pset! :anchor (p.point/->Point 0.5 0.5))
+      (p.core/pset! :word-wrap true)
+      (p.core/pset! :word-wrap-width 250)
+      (p.core/pset! :x -230)
+      (p.core/pset! :y -10))
+    (-> system
+        (b.entity/add-entity dungeon-status)
+        (b.entity/add-component dungeon-status (f.component/->DungeonStatus sprite text)))))
+
 (defn create-entities [system]
   (let [dungeon (b.entity/create-entity)
         explore-button (b.entity/create-entity)
@@ -218,7 +261,6 @@
     (-> system
         (b.entity/add-entity dungeon)
         (b.entity/add-component dungeon (f.component/->Dungeon initial-dungeon 0))
-        (initialize-dungeon)
         (b.entity/add-entity explore-button)
         (b.entity/add-component explore-button (f.component/->ExploreButton explore-phzr-button))
         (b.entity/add-entity exploration-results)
@@ -230,7 +272,9 @@
         (b.entity/add-component movement-results (f.component/->MovementResults {} movement-results-text))
         (b.entity/add-entity results-button-entity)
         (b.entity/add-component results-button-entity (f.component/->ResultsButton results-button))
-        (create-movement-buttons))))
+        (create-movement-buttons)
+        (create-dungeon-status)
+        (initialize-dungeon))))
 
 (def liar-truth-percentage 0.25)
 (defn get-answer [party-member is-it-safe?]
@@ -320,6 +364,7 @@
         {:keys [previous-text next-text]} (b.entity/get-component system results-navigation-entity f.component/ResultsNavigation)]
     (p.core/pset! exploration-results-text :text exploration-results-string)
     (p.core/pset! exploration-results-sprite :visible true)
+    (-> system :phzr-game :world (p.world/bring-to-top exploration-results-sprite))
     (-> system
         (assoc :explored-this-turn true)
         (b.entity/add-component exploration-results-entity
@@ -378,7 +423,10 @@
                                   (assoc results-navigation-component
                                          :current-result (dec exploration-results-count)))
           (update-results-navigation)
-          (as-> sys (do (p.core/pset! exploration-results-sprite :visible true) sys)))
+          (as-> sys (do
+                      (p.core/pset! exploration-results-sprite :visible true)
+                      (-> sys :phzr-game :world (p.world/bring-to-top exploration-results-sprite))
+                      sys)))
           system)))
 
 (defn move-to-next-room [system direction]

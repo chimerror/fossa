@@ -58,3 +58,4 @@
 (defrecord ExplorationResults [previous-results])
 (defrecord MovementResults [previous-results movement-results-text])
 (defrecord ResultsButton [phzr-button])
+(defrecord DungeonStatus [sprite text])

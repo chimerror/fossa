@@ -4,6 +4,7 @@
             [phzr.game-object-factory :as p.factory]
             [phzr.loader :as p.loader]
             [phzr.sprite :as p.sprite]
+            [phzr.world :as p.world]
             [fossa.component :as f.component]
             [fossa.group :as f.group]
             [fossa.input :as f.input]))
@@ -73,6 +74,7 @@
         (p.core/pset! character-sprite :frame frame)
         (p.core/pset! textbox-text :text text)
         (p.core/pset! group :visible true)
+        (p.world/bring-to-top (-> sys :phzr-game :world) group)
         (assoc sys :active-dialogue next-dialogues)))))
 
 (defn start-dialogue [system dialogue-key]

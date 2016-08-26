@@ -5,13 +5,11 @@
             [phzr.loader :as p.loader]
             [phzr.math :as p.math]
             [phzr.point :as p.point]
-            [phzr.pointer :as p.pointer]
             [phzr.sprite :as p.sprite]
             [fossa.component :as f.component]
             [fossa.exploration-path :as f.exploration-path]
             [fossa.group :as f.group]
-            [fossa.input :as f.input]
-            [fossa.rendering :as f.rendering]))
+            [fossa.input :as f.input]))
 
 (defn preload-assets [loader]
   (doto loader
@@ -168,6 +166,12 @@
               (f.component/->PartyMember (f.component/get-member-name-from-entity system new-liar) true)))
           system new-liars))
       system))) ; Note we never reduce the number of liars!
+
+(defn get-liar-count [system]
+  (->> (b.entity/get-all-entities-with-component system f.component/PartyMember)
+       (map #(b.entity/get-component system % f.component/PartyMember))
+       (filter :is-liar)
+       (count)))
 
 (defn TEMP-get-liars [system]
   (->> (b.entity/get-all-entities-with-component system f.component/PartyMember)
