@@ -1,0 +1,5 @@
+// Compiled by ClojureScript 1.9.89 {:static-fns true, :optimize-constants true}
+goog.provide('phzr.impl.accessors.plugin');
+goog.require('cljs.core');
+phzr.impl.accessors.plugin.plugin_get_properties = cljs.core.PersistentHashMap.fromArrays([cljs.core.cst$kw$has_DASH_render,cljs.core.cst$kw$parent,cljs.core.cst$kw$game,cljs.core.cst$kw$active,cljs.core.cst$kw$has_DASH_update,cljs.core.cst$kw$has_DASH_pre_DASH_update,cljs.core.cst$kw$has_DASH_post_DASH_render,cljs.core.cst$kw$visible,cljs.core.cst$kw$has_DASH_post_DASH_update],["hasRender","parent","game","active","hasUpdate","hasPreUpdate","hasPostRender","visible","hasPostUpdate"]);
+phzr.impl.accessors.plugin.plugin_set_properties = cljs.core.PersistentHashMap.fromArrays([cljs.core.cst$kw$has_DASH_render,cljs.core.cst$kw$parent,cljs.core.cst$kw$game,cljs.core.cst$kw$active,cljs.core.cst$kw$has_DASH_update,cljs.core.cst$kw$has_DASH_pre_DASH_update,cljs.core.cst$kw$has_DASH_post_DASH_render,cljs.core.cst$kw$visible,cljs.core.cst$kw$has_DASH_post_DASH_update],["hasRender","parent","game","active","hasUpdate","hasPreUpdate","hasPostRender","visible","hasPostUpdate"]);
